@@ -1,7 +1,7 @@
 import { NoteRepository } from './notes.repository';
 import { Note } from './notes.entity';
 import { AuditService } from '../audit/audit.service';
-import { AuditEventType } from '../audit/audit.types';
+import { AuditTopic } from '../audit/audit.topics';
 
 export class NotesService {
     private notesRepository: NoteRepository;
@@ -17,7 +17,7 @@ export class NotesService {
         
         // Log the creation event
         await this.auditService.logEvent(
-            AuditEventType.NOTE_CREATED,
+            AuditTopic.NOTE_CREATED,
             'note',
             note.id,
             userId,
@@ -41,7 +41,7 @@ export class NotesService {
 
         // Log the update event
         await this.auditService.logEvent(
-            AuditEventType.NOTE_UPDATED,
+            AuditTopic.NOTE_UPDATED,
             'note',
             id,
             userId,
@@ -62,7 +62,7 @@ export class NotesService {
 
         // Log the deletion event
         await this.auditService.logEvent(
-            AuditEventType.NOTE_DELETED,
+            AuditTopic.NOTE_DELETED,
             'note',
             id,
             userId,
@@ -85,9 +85,9 @@ export class NotesService {
 
         // Log the duplication event
         await this.auditService.logEvent(
-            AuditEventType.NOTE_DUPLICATED,
+            AuditTopic.NOTE_DUPLICATED,
             'note',
-            duplicatedNote.id,
+            originalNote.id,
             userId,
             originalNote,
             duplicatedNote

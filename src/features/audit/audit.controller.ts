@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { AuditService } from './audit.service';
-import { AuditEventType } from './audit.types';
+import { AuditTopic } from './audit.topics';
 
 export class AuditController {
     private auditService: AuditService;
@@ -32,7 +32,7 @@ export class AuditController {
     async getEventHistory(req: Request, res: Response) {
         try {
             const { eventType } = req.params;
-            const history = await this.auditService.getEventHistory(eventType as AuditEventType);
+            const history = await this.auditService.getEventHistory(eventType as AuditTopic);
             res.json(history);
         } catch (error) {
             res.status(500).json({ error: 'Failed to fetch event history' });

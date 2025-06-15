@@ -2,10 +2,10 @@
   "name": "notes-manager-server",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
+  "main": "src/app.ts",
   "scripts": {
-    "start": "node dist/server.js",
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "start": "ts-node src/server.ts",
+    "start:dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
     "worker:audit": "ts-node src/workers/audit.worker.ts",
     "worker:audit:dev": "ts-node-dev --respawn --transpile-only src/workers/audit.worker.ts"

@@ -1,13 +1,8 @@
-export enum AuditEventType {
-    NOTE_CREATED = 'note.created',
-    NOTE_UPDATED = 'note.updated',
-    NOTE_DELETED = 'note.deleted',
-    NOTE_DUPLICATED = 'note.duplicated'
-}
+import { AuditTopic } from './audit.topics';
 
 export interface AuditLogData {
     auditLogId: number;
-    eventType: AuditEventType;
+    eventType: AuditTopic;
     entityType: string;
     entityId: string;
     userId: string;

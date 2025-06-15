@@ -1,7 +1,8 @@
 import { AuditRepository } from './audit.repository';
 import { AuditLog } from './audit.entity';
 import { rabbitMQService } from '../../services/rabbitmq.service';
-import { AuditEventType, AuditLogData } from './audit.types';
+import { AuditTopic } from './audit.topics';
+import { AuditLogData } from './audit.types';
 
 export class AuditService {
     private auditRepository: AuditRepository;
@@ -11,7 +12,7 @@ export class AuditService {
     }
 
     async logEvent(
-        eventType: AuditEventType,
+        eventType: AuditTopic,
         entityType: string,
         entityId: string,
         userId: string,
@@ -56,7 +57,7 @@ export class AuditService {
         return this.auditRepository.findByEntityType(entityType);
     }
 
-    async getEventHistory(eventType: AuditEventType): Promise<AuditLog[]> {
+    async getEventHistory(eventType: AuditTopic): Promise<AuditLog[]> {
         return this.auditRepository.findByEventType(eventType);
     }
 

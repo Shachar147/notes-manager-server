@@ -1,9 +1,9 @@
-import amqp from 'amqplib';
+import * as amqp from 'amqplib';
 import { AuditService } from '../features/audit/audit.service';
-import { AuditEventType } from '../features/audit/audit.types';
+import { AuditTopic } from '../features/audit/audit.topics';
 
 class AuditWorker {
-    private connection: amqp.Connection | null = null;
+    private connection: amqp.ChannelModel | null = null;
     private channel: amqp.Channel | null = null;
     private readonly exchangeName = 'notes_events';
     private readonly queueName = 'audit_logs_queue';
@@ -29,7 +29,7 @@ class AuditWorker {
             });
 
             // Bind queue to exchange with all audit event patterns
-            const eventTypes = Object.values(AuditEventType);
+            const eventTypes = Object.values(AuditTopic);
             for (const eventType of eventTypes) {
                 await this.channel.bindQueue(this.queueName, this.exchangeName, eventType);
             }
