@@ -1,7 +1,7 @@
 import { AuditTopic } from './audit.topics';
 
 export interface AuditLogData {
-    auditLogId: number;
+    // auditLogId: number;
     eventType: AuditTopic;
     entityType: string;
     entityId: string;

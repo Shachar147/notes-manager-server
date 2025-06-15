@@ -1,4 +1,4 @@
-import { Repository, EntityRepository, Between } from 'typeorm';
+import { Repository, Between } from 'typeorm';
 import { AuditLog } from './audit.entity';
 import { AppDataSource } from '../../config/database';
 
