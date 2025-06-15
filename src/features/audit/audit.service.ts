@@ -52,6 +52,10 @@ export class AuditService {
         return this.auditRepository.findByEntity(entityType, entityId);
     }
 
+    async getEntityTypeHistory(entityType: string): Promise<AuditLog[]> {
+        return this.auditRepository.findByEntityType(entityType);
+    }
+
     async getEventHistory(eventType: AuditEventType): Promise<AuditLog[]> {
         return this.auditRepository.findByEventType(eventType);
     }

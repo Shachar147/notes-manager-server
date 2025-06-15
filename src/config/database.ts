@@ -1,5 +1,6 @@
 import { DataSource } from 'typeorm';
 import { Note } from '../features/notes/notes.entity';
+import {AuditLog} from "../features/audit/audit.entity";
 
 export const AppDataSource = new DataSource({
     type: 'postgres',
@@ -10,7 +11,7 @@ export const AppDataSource = new DataSource({
     database: 'notes_db',
     synchronize: true, // Only in development! <- means that once something changes in the code it updates db
     logging: false,
-    entities: [Note],
+    entities: [Note, AuditLog],
     subscribers: [],
     migrations: [],
-});
+} as any);

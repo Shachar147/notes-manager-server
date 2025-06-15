@@ -16,6 +16,13 @@ export class AuditRepository {
         });
     }
 
+    async findByEntityType(entityType: string): Promise<AuditLog[]> {
+        return this.repository.find({
+            where: { entityType },
+            order: { createdAt: 'DESC' }
+        });
+    }
+
     async findByEventType(eventType: string): Promise<AuditLog[]> {
         return this.repository.find({
             where: { eventType },

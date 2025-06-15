@@ -19,6 +19,16 @@ export class AuditController {
         }
     }
 
+    async getEntityTypeHistory(req: Request, res: Response) {
+        try {
+            const { entityType } = req.params;
+            const history = await this.auditService.getEntityTypeHistory(entityType);
+            res.json(history);
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to fetch entity history' });
+        }
+    }
+
     async getEventHistory(req: Request, res: Response) {
         try {
             const { eventType } = req.params;

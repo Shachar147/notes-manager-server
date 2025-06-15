@@ -1,7 +1,7 @@
-import amqp from 'amqplib';
+import * as amqp from 'amqplib';
 
 export class RabbitMQService {
-    private connection: amqp.Connection | null = null;
+    private connection: amqp.ChannelModel | null = null;
     private channel: amqp.Channel | null = null;
     private readonly exchangeName = 'notes_events';
     private readonly exchangeType = 'topic';
