@@ -1,4 +1,5 @@
 import * as amqp from 'amqplib';
+import { RABBITMQ_CONFIG } from '../config/rabbitmq';
 
 export class RabbitMQService {
     private connection: amqp.ChannelModel | null = null;
@@ -8,7 +9,7 @@ export class RabbitMQService {
 
     async connect() {
         try {
-            this.connection = await amqp.connect('amqp://admin:admin123@localhost:5672');
+            this.connection = await amqp.connect(RABBITMQ_CONFIG.url);
             this.channel = await this.connection.createChannel();
             
             // Create exchange
@@ -21,6 +22,13 @@ export class RabbitMQService {
             console.error('Failed to connect to RabbitMQ:', error);
             throw error;
         }
+    }
+
+    getChannel(): amqp.Channel {
+        if (!this.channel) {
+            throw new Error('RabbitMQ channel not initialized');
+        }
+        return this.channel;
     }
 
     async publishEvent(routingKey: string, data: any) {

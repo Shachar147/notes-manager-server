@@ -1,8 +1,8 @@
-import { DataSource } from 'typeorm';
+import { DataSource, DataSourceOptions } from 'typeorm';
 import { Note } from '../features/notes/notes.entity';
-import {AuditLog} from "../features/audit/audit.entity";
+import { AuditLog } from "../features/audit/audit.entity";
 
-export const AppDataSource = new DataSource({
+const options: DataSourceOptions = {
     type: 'postgres',
     host: 'localhost',
     port: 5433,
@@ -14,4 +14,6 @@ export const AppDataSource = new DataSource({
     entities: [Note, AuditLog],
     subscribers: [],
     migrations: [],
-} as any);
+};
+
+export const AppDataSource = new DataSource(options);

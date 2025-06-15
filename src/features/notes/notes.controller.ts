@@ -47,7 +47,7 @@ export async function createNote(req: Request<CreateNoteDto>, res: Response): Pr
         }
         
         // TODO: Replace with actual user ID from authentication
-        const userId = 'user123';
+        const userId = '0';
         const newNote = await notesService.createNote(
             { title, content: description },
             userId
@@ -73,7 +73,7 @@ export async function updateNote(req: Request, res: Response): Promise<void> {
         if (description) updatedFields.content = description;
 
         // TODO: Replace with actual user ID from authentication
-        const userId = 'user123';
+        const userId = '0';
         const updatedNote = await notesService.updateNote(noteId, updatedFields, userId);
         sendSuccess(res, formatNote(updatedNote));
     } catch (error: any) {
@@ -86,7 +86,7 @@ export async function deleteNote(req: Request, res: Response): Promise<void> {
     try {
         const noteId = req.params.id;
         // TODO: Replace with actual user ID from authentication
-        const userId = 'user123';
+        const userId = '0';
         await notesService.deleteNote(noteId, userId);
         sendSuccess(res, `Note ${noteId} deleted successfully`, 204);
     } catch (error: any) {
@@ -99,7 +99,7 @@ export async function duplicateNote(req: Request, res: Response): Promise<void> 
     try {
         const noteId = req.params.id;
         // TODO: Replace with actual user ID from authentication
-        const userId = 'user123';
+        const userId = '0';
         const duplicatedNote = await notesService.duplicateNote(noteId, userId);
         sendSuccess(res, formatNote(duplicatedNote));
     } catch (error: any) {

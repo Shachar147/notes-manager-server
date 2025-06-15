@@ -1,9 +1,9 @@
 import * as amqp from 'amqplib';
 import { AuditService } from '../features/audit/audit.service';
 import { AuditTopic } from '../features/audit/audit.topics';
+import { rabbitMQService } from '../services/rabbitmq.service';
 
 class AuditWorker {
-    private connection: amqp.ChannelModel | null = null;
     private channel: amqp.Channel | null = null;
     private readonly exchangeName = 'notes_events';
     private readonly queueName = 'audit_logs_queue';
@@ -15,13 +15,8 @@ class AuditWorker {
 
     async connect() {
         try {
-            this.connection = await amqp.connect('amqp://admin:admin123@localhost:5672');
-            this.channel = await this.connection.createChannel();
-
-            // Create exchange if it doesn't exist
-            await this.channel.assertExchange(this.exchangeName, 'topic', {
-                durable: true
-            });
+            await rabbitMQService.connect();
+            this.channel = rabbitMQService.getChannel();
 
             // Create queue
             await this.channel.assertQueue(this.queueName, {
@@ -76,9 +71,6 @@ class AuditWorker {
     async close() {
         if (this.channel) {
             await this.channel.close();
-        }
-        if (this.connection) {
-            await this.connection.close();
         }
     }
 }

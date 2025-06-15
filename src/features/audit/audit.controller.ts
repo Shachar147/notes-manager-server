@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { AuditService } from './audit.service';
 import { AuditTopic } from './audit.topics';
+import { sendSuccess, sendError } from '../../utils/response-utils';
 
 export class AuditController {
     private auditService: AuditService;
@@ -13,9 +14,9 @@ export class AuditController {
         try {
             const { entityType, entityId } = req.params;
             const history = await this.auditService.getEntityHistory(entityType, entityId);
-            res.json(history);
+            sendSuccess(res, history);
         } catch (error) {
-            res.status(500).json({ error: 'Failed to fetch entity history' });
+            sendError(res, 'Failed to fetch entity history', 500);
         }
     }
 
@@ -33,9 +34,9 @@ export class AuditController {
         try {
             const { eventType } = req.params;
             const history = await this.auditService.getEventHistory(eventType as AuditTopic);
-            res.json(history);
+            sendSuccess(res, history);
         } catch (error) {
-            res.status(500).json({ error: 'Failed to fetch event history' });
+            sendError(res, 'Failed to fetch event history', 500);
         }
     }
 
@@ -51,9 +52,9 @@ export class AuditController {
                 new Date(startDate as string),
                 new Date(endDate as string)
             );
-            res.json(history);
+            sendSuccess(res, history);
         } catch (error) {
-            res.status(500).json({ error: 'Failed to fetch date range history' });
+            sendError(res, 'Failed to fetch date range history', 500);
         }
     }
 } 
