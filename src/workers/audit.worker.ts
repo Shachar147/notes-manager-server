@@ -2,15 +2,24 @@ import * as amqp from 'amqplib';
 import { AuditService } from '../features/audit/audit.service';
 import { AuditTopic } from '../features/audit/audit.topics';
 import { rabbitMQService } from '../services/rabbitmq.service';
+import { AuditLogData } from '../features/audit/audit.types';
+import { AppDataSource } from '../config/database';
 
 class AuditWorker {
     private channel: amqp.Channel | null = null;
     private readonly exchangeName = 'notes_events';
     private readonly queueName = 'audit_logs_queue';
     private readonly auditService: AuditService;
+    private readonly topicToHandler: Record<string, (data: any) => Promise<void>>;
 
     constructor() {
         this.auditService = new AuditService();
+        this.topicToHandler = {
+            [AuditTopic.NOTE_CREATED]: this.handleAuditEvent.bind(this),
+            [AuditTopic.NOTE_UPDATED]: this.handleAuditEvent.bind(this),
+            [AuditTopic.NOTE_DELETED]: this.handleAuditEvent.bind(this),
+            [AuditTopic.NOTE_DUPLICATED]: this.handleAuditEvent.bind(this),
+        };
     }
 
     async connect() {
@@ -45,17 +54,12 @@ class AuditWorker {
             await this.channel.consume(this.queueName, async (msg) => {
                 if (msg) {
                     try {
+                        const routingKey = msg.fields.routingKey;
                         const content = JSON.parse(msg.content.toString());
-                        console.log('Received audit event:', content);
-
-                        // Process the event (you can add additional processing here)
-                        // For now, we're just logging it since the audit log is already created
-                        // when the event is published
-
+                        await this.handleMessage(routingKey, content);
                         this.channel?.ack(msg);
                     } catch (error) {
                         console.error('Error processing message:', error);
-                        // Reject the message and requeue it
                         this.channel?.nack(msg, false, true);
                     }
                 }
@@ -68,6 +72,31 @@ class AuditWorker {
         }
     }
 
+    async handleMessage(topic: string, data: any) {
+        const handler = this.topicToHandler[topic];
+        if (handler) {
+            await handler(data);
+        } else {
+            console.warn(`No handler for topic: ${topic}`);
+        }
+    }
+
+    async handleAuditEvent(data: AuditLogData) {
+        console.log("Receieved", {
+            data
+        })
+        // Write to DB using AuditService
+        await this.auditService.createAuditLog({
+                eventType: data.eventType,
+                entityType: data.entityType,
+                entityId: data.entityId,
+                userId: data.userId,
+                oldData: data.oldData,
+                newData: data.newData,
+                metadata: data.metadata
+        })
+    }
+
     async close() {
         if (this.channel) {
             await this.channel.close();
@@ -75,24 +104,33 @@ class AuditWorker {
     }
 }
 
-// Start the worker
-const worker = new AuditWorker();
-worker.connect()
-    .then(() => worker.start())
-    .catch(error => {
-        console.error('Failed to start worker:', error);
+// Start the worker and initialize DB connection
+AppDataSource.initialize()
+    .then(() => {
+        console.log('Database connected successfully for Audit Worker');
+        const worker = new AuditWorker();
+        worker.connect()
+            .then(() => worker.start())
+            .catch(error => {
+                console.error('Failed to start worker:', error);
+                process.exit(1);
+            });
+    })
+    .catch((error) => {
+        console.error('TypeORM connection error in Audit Worker: ', error);
         process.exit(1);
     });
 
 // Handle graceful shutdown
 process.on('SIGTERM', async () => {
     console.log('Received SIGTERM. Closing worker...');
-    await worker.close();
+    // No need to close individual worker connection, rabbitMQService handles it
+    await rabbitMQService.close(); // Ensure rabbitMQService connection is closed
     process.exit(0);
 });
 
 process.on('SIGINT', async () => {
     console.log('Received SIGINT. Closing worker...');
-    await worker.close();
+    await rabbitMQService.close(); // Ensure rabbitMQService connection is closed
     process.exit(0);
 }); 

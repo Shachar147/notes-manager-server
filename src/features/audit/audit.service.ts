@@ -11,6 +11,10 @@ export class AuditService {
         this.auditRepository = new AuditRepository();
     }
 
+    async createAuditLog(auditLog: Partial<AuditLog>): Promise<AuditLog> {
+        return this.auditRepository.createAuditLog(auditLog);
+    }
+
     async logEvent(
         eventType: AuditTopic,
         entityType: string,
@@ -19,21 +23,10 @@ export class AuditService {
         oldData?: Record<string, any>,
         newData?: Record<string, any>,
         metadata?: Record<string, any>
-    ): Promise<AuditLog> {
-        // Create audit log in database
-        const auditLog = await this.auditRepository.createAuditLog({
-            eventType,
-            entityType,
-            entityId,
-            userId,
-            oldData,
-            newData,
-            metadata
-        });
-
-        // Publish event to RabbitMQ
-        const eventData: gitAuditLogData = {
-            auditLogId: auditLog.id,
+    ): Promise<void> {
+        // Only publish event to RabbitMQ
+        const eventData: AuditLogData = {
+            // auditLogId: 0, // Will be set by DB in worker
             eventType,
             entityType,
             entityId,
@@ -41,12 +34,9 @@ export class AuditService {
             oldData,
             newData,
             metadata,
-            timestamp: auditLog.createdAt
+            timestamp: new Date()
         };
-
         await rabbitMQService.publishEvent(eventType, eventData);
-
-        return auditLog;
     }
 
     async getEntityHistory(entityType: string, entityId: string): Promise<AuditLog[]> {
