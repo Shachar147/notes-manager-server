@@ -32,7 +32,7 @@ export class AuditService {
         });
 
         // Publish event to RabbitMQ
-        const eventData: AuditLogData = {
+        const eventData: gitAuditLogData = {
             auditLogId: auditLog.id,
             eventType,
             entityType,
