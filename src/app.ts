@@ -2,24 +2,16 @@ import express from 'express';
 import cors from 'cors';
 import notesRoutes from './features/notes/notes.routes';
 import auditRoutes from './features/audit/audit.routes';
-import logger from "./utils/logger";
+import {requestIdMiddleware} from "./middlewares/request-id.middleware";
+import {elasticLoggerMiddleware} from "./middlewares/elastic-logger.middleware";
 
 const app = express();
 
 app.use(cors());
 app.use(express.json())
 
-// Request logging middleware
-app.use((req, res, next) => {
-    const message = `Incoming Request ${req.method} ${req.originalUrl}`;
-    console.log(message);
-    logger.info(message, {
-        method: req.method,
-        url: req.originalUrl,
-        ip: req.ip,
-    });
-    next();
-});
+app.use(requestIdMiddleware);
+app.use(elasticLoggerMiddleware); // Request logging middleware
 
 app.use('/notes', notesRoutes);
 app.use('/audit', auditRoutes);
