@@ -79,6 +79,8 @@ export class NotesService {
 
         const duplicatedNote = await this.notesRepository.create({
             ...originalNote,
+            createdAt: undefined, // Let the database generate created at to NOW
+            updatedAt: undefined,
             id: undefined, // Let the database generate a new ID
             title: `${originalNote.title} (Copy)`
         });
