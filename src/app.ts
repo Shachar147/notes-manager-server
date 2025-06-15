@@ -11,7 +11,9 @@ app.use(express.json())
 
 // Request logging middleware
 app.use((req, res, next) => {
-    logger.info('Incoming request', {
+    const message = `Incoming Request ${req.method} ${req.originalUrl}`;
+    console.log(message);
+    logger.info(message, {
         method: req.method,
         url: req.originalUrl,
         ip: req.ip,

@@ -18,7 +18,7 @@ export const ELASTICSEARCH_CONFIG =
         winston.format.json()
     ),
     transports: [
-        new winston.transports.Console(),
+        // new winston.transports.Console(),
         esTransport,
     ],
 }
