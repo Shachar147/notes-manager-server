@@ -45,7 +45,7 @@ export async function createNote(req: Request<CreateNoteDto>, res: Response): Pr
             sendError(res, 'Missing: description', 400);
             return;
         }
-        
+
         // TODO: Replace with actual user ID from authentication
         const userId = '0';
         const newNote = await notesService.createNote(
@@ -88,7 +88,7 @@ export async function deleteNote(req: Request, res: Response): Promise<void> {
         // TODO: Replace with actual user ID from authentication
         const userId = '0';
         await notesService.deleteNote(noteId, userId);
-        sendSuccess(res, `Note ${noteId} deleted successfully`, 204);
+        sendSuccess(res, { message: `Note ${noteId} deleted successfully` }, 204);
     } catch (error: any) {
         console.error('Error deleting note:', error);
         sendError(res, `Failed to delete note: ${error.message}`, error.message.includes('not found') ? 404 : 500);

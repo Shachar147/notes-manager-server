@@ -2,7 +2,7 @@ import { Response } from 'express'
 import logger from "./logger";
 import {asyncLocalStorage} from "../config/elasticsearch";
 
-export function sendSuccess(res: Response, data: any, statusCode = 200): Response {
+export function sendSuccess(res: Response, data: Record<string, any>, statusCode = 200): Response {
     const store = asyncLocalStorage.getStore();
     const requestId = store.requestId;
     logger.info('Prepare Response', { data, requestId });
