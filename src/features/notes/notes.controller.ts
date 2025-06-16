@@ -17,20 +17,20 @@ function formatNote(note: Note): NoteInterface {
 export async function getNoteById(req: Request, res: Response): Promise<void> {
     try {
         const note = await notesService.getNote(req.params.id);
-        sendSuccess(res, formatNote(note));
+        sendSuccess(req, res, formatNote(note));
     } catch (error: any) {
         console.error('Error fetching note:', error);
-        sendError(res, `Failed to fetch note: ${error.message}`, error.message.includes('not found') ? 404 : 500);
+        sendError(req, res, `Failed to fetch note: ${error.message}`, error.message.includes('not found') ? 404 : 500, { errorMessage: error.message, exc_info: error.stack });
     }
 }
 
-export async function getAllNotes(_req: Request, res: Response): Promise<void> {
+export async function getAllNotes(req: Request, res: Response): Promise<void> {
     try {
         const notes = await notesService.getAllNotes();
-        sendSuccess(res, notes.map(formatNote));
+        sendSuccess(req, res, notes.map(formatNote));
     } catch (error: any) {
         console.error('Error fetching notes:', error);
-        sendError(res, `Failed to fetch notes: ${error.message}`, 500);
+        sendError(req, res, `Failed to fetch notes: ${error.message}`, 500, { "errorMessage": error.message, "excInfo": error.stack });
     }
 }
 
@@ -38,11 +38,11 @@ export async function createNote(req: Request<CreateNoteDto>, res: Response): Pr
     try {
         const { title, description } = req.body ?? {};
         if (!title) {
-            sendError(res, 'Missing: title', 400);
+            sendError(req, res, 'Missing: title', 400);
             return;
         }
         if (!description) {
-            sendError(res, 'Missing: description', 400);
+            sendError(req, res, 'Missing: description', 400);
             return;
         }
 
@@ -52,10 +52,10 @@ export async function createNote(req: Request<CreateNoteDto>, res: Response): Pr
             { title, content: description },
             userId
         );
-        sendSuccess(res, formatNote(newNote), 201);
+        sendSuccess(req, res, formatNote(newNote), 201);
     } catch (error: any) {
         console.error('Error creating note:', error);
-        sendError(res, `Failed to create note: ${error.message}`, 500);
+        sendError(req, res, `Failed to create note: ${error.message}`, 500, { errorMessage: error.message, exc_info: error.stack });
     }
 }
 
@@ -63,7 +63,7 @@ export async function updateNote(req: Request, res: Response): Promise<void> {
     try {
         const { title, description } = req.body ?? {};
         if (!title && !description) {
-            sendError(res, 'Nothing to update', 400);
+            sendError(req, res, 'Nothing to update', 400);
             return;
         }
 
@@ -75,10 +75,10 @@ export async function updateNote(req: Request, res: Response): Promise<void> {
         // TODO: Replace with actual user ID from authentication
         const userId = '0';
         const updatedNote = await notesService.updateNote(noteId, updatedFields, userId);
-        sendSuccess(res, formatNote(updatedNote));
+        sendSuccess(req, res, formatNote(updatedNote));
     } catch (error: any) {
         console.error('Error updating note:', error);
-        sendError(res, `Failed to update note: ${error.message}`, error.message.includes('not found') ? 404 : 500);
+        sendError(req, res, `Failed to update note: ${error.message}`, error.message.includes('not found') ? 404 : 500, { errorMessage: error.message, exc_info: error.stack });
     }
 }
 
@@ -88,10 +88,10 @@ export async function deleteNote(req: Request, res: Response): Promise<void> {
         // TODO: Replace with actual user ID from authentication
         const userId = '0';
         await notesService.deleteNote(noteId, userId);
-        sendSuccess(res, { message: `Note ${noteId} deleted successfully` }, 204);
+        sendSuccess(req, res, { message: `Note ${noteId} deleted successfully` }, 204);
     } catch (error: any) {
         console.error('Error deleting note:', error);
-        sendError(res, `Failed to delete note: ${error.message}`, error.message.includes('not found') ? 404 : 500);
+        sendError(req, res, `Failed to delete note: ${error.message}`, error.message.includes('not found') ? 404 : 500, { errorMessage: error.message, exc_info: error.stack });
     }
 }
 
@@ -101,9 +101,9 @@ export async function duplicateNote(req: Request, res: Response): Promise<void> 
         // TODO: Replace with actual user ID from authentication
         const userId = '0';
         const duplicatedNote = await notesService.duplicateNote(noteId, userId);
-        sendSuccess(res, formatNote(duplicatedNote));
+        sendSuccess(req, res, formatNote(duplicatedNote));
     } catch (error: any) {
         console.error('Error duplicating note:', error);
-        sendError(res, `Failed to duplicate note: ${error.message}`, error.message.includes('not found') ? 404 : 500);
+        sendError(req, res, `Failed to duplicate note: ${error.message}`, error.message.includes('not found') ? 404 : 500, { errorMessage: error.message, exc_info: error.stack });
     }
 }
