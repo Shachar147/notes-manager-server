@@ -14,9 +14,9 @@ export class AuditController {
         try {
             const { entityType, entityId } = req.params;
             const history = await this.auditService.getEntityHistory(entityType, entityId);
-            sendSuccess(res, history);
-        } catch (error) {
-            sendError(res, 'Failed to fetch entity history', 500);
+            sendSuccess(req, res, history);
+        } catch (error: any) {
+            sendError(req, res, 'Failed to fetch entity history', 500, { errorMessage: error.message, exc_info: error.stack });
         }
     }
 
@@ -26,7 +26,7 @@ export class AuditController {
             const history = await this.auditService.getEntityTypeHistory(entityType);
             res.json(history);
         } catch (error) {
-            res.status(500).json({ error: 'Failed to fetch entity history' });
+            sendError(res, 'Failed to fetch entity history', 500, { errorMessage: error.message, exc_info: error.stack })
         }
     }
 
@@ -34,9 +34,9 @@ export class AuditController {
         try {
             const { eventType } = req.params;
             const history = await this.auditService.getEventHistory(eventType as AuditTopic);
-            sendSuccess(res, history);
-        } catch (error) {
-            sendError(res, 'Failed to fetch event history', 500);
+            sendSuccess(req, res, history);
+        } catch (error: any) {
+            sendError(req, res, 'Failed to fetch event history', 500, { errorMessage: error.message, exc_info: error.stack });
         }
     }
 
@@ -44,7 +44,7 @@ export class AuditController {
         try {
             const { startDate, endDate } = req.query;
             if (!startDate || !endDate) {
-                res.status(400).json({ error: 'Start date and end date are required' });
+                sendError(req, res, 'Missing required query parameters: startDate and endDate', 400);
                 return;
             }
 
@@ -52,9 +52,9 @@ export class AuditController {
                 new Date(startDate as string),
                 new Date(endDate as string)
             );
-            sendSuccess(res, history);
-        } catch (error) {
-            sendError(res, 'Failed to fetch date range history', 500);
+            sendSuccess(req, res, history);
+        } catch (error: any) {
+            sendError(req, res, 'Failed to fetch date range history', 500, { errorMessage: error.message, exc_info: error.stack });
         }
     }
 } 
