@@ -9,9 +9,19 @@ AppDataSource.initialize()
     .then(async () => {
         console.log('Database connected successfully');
         await rabbitMQService.connect();
+
         app.listen(PORT, () => {
-            console.log(`Server is running on port ${PORT}`);
+            console.log(`
+ ____                           
+/ ___|  ___ _ ____   _____ _ __ 
+\\___ \\ / _ \\ '__\\ \\ / / _ \\ '__|
+ ___) |  __/ |   \\ V /  __/ |   
+|____/ \\___|_|    \\_/ \\___|_|    
+
+Notes Manager SERVER is running on http://localhost:${PORT}
+`);
         });
+
     })
     .catch((error) => console.log('TypeORM connection error: ', error));
 

@@ -13,7 +13,10 @@ export class NotesService {
     }
 
     async createNote(noteData: Partial<Note>, userId: string): Promise<Note> {
-        const note = await this.notesRepository.create(noteData);
+        const note = await this.notesRepository.create({
+            ...noteData,
+            userId // Ensure the note is created with the user ID
+        });
         
         // Log the creation event
         await this.auditService.logEvent(
@@ -29,12 +32,12 @@ export class NotesService {
     }
 
     async updateNote(id: string, updates: Partial<Note>, userId: string): Promise<Note> {
-        const oldNote = await this.notesRepository.findById(id);
+        const oldNote = await this.notesRepository.findById(id, userId);
         if (!oldNote) {
             throw new Error(`Note with id ${id} not found`);
         }
 
-        const updatedNote = await this.notesRepository.update(id, updates);
+        const updatedNote = await this.notesRepository.update(id, updates, userId);
         if (!updatedNote) {
             throw new Error(`Failed to update note with id ${id}`);
         }
@@ -53,12 +56,12 @@ export class NotesService {
     }
 
     async deleteNote(id: string, userId: string): Promise<void> {
-        const note = await this.notesRepository.findById(id);
+        const note = await this.notesRepository.findById(id, userId);
         if (!note) {
             throw new Error(`Note with id ${id} not found`);
         }
 
-        await this.notesRepository.delete(id);
+        await this.notesRepository.delete(id, userId);
 
         // Log the deletion event
         await this.auditService.logEvent(
@@ -72,7 +75,7 @@ export class NotesService {
     }
 
     async duplicateNote(id: string, userId: string): Promise<Note> {
-        const originalNote = await this.notesRepository.findById(id);
+        const originalNote = await this.notesRepository.findById(id, userId);
         if (!originalNote) {
             throw new Error(`Note with id ${id} not found`);
         }
@@ -82,7 +85,8 @@ export class NotesService {
             createdAt: undefined, // Let the database generate created at to NOW
             updatedAt: undefined,
             id: undefined, // Let the database generate a new ID
-            title: `${originalNote.title} (Copy)`
+            title: `${originalNote.title} (Copy)`,
+            userId // Ensure the duplicated note belongs to the same user
         });
 
         // Log the duplication event
@@ -98,15 +102,15 @@ export class NotesService {
         return duplicatedNote;
     }
 
-    async getNote(id: string): Promise<Note> {
-        const note = await this.notesRepository.findById(id);
+    async getNote(id: string, userId: string): Promise<Note> {
+        const note = await this.notesRepository.findById(id, userId);
         if (!note) {
             throw new Error(`Note with id ${id} not found`);
         }
         return note;
     }
 
-    async getAllNotes(): Promise<Note[]> {
-        return this.notesRepository.findAll();
+    async getAllNotes(userId: string): Promise<Note[]> {
+        return this.notesRepository.findAll(userId);
     }
 } 

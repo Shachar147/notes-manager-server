@@ -14,20 +14,23 @@ export class NoteRepository {
         return await this.repository.save(newNote);
     }
 
-    async findAll(): Promise<Note[]> {
-        return await this.repository.find();
+    async findAll(userId: string): Promise<Note[]> {
+        return await this.repository.find({
+            where: { userId },
+            order: { updatedAt: 'DESC' }
+        });
     }
 
-    async findById(id: string): Promise<Note | null> {
-        return await this.repository.findOneBy({ id });
+    async findById(id: string, userId: string): Promise<Note | null> {
+        return await this.repository.findOneBy({ id, userId });
     }
 
-    async update(id: string, note: Partial<Note>): Promise<Note | null> {
-        await this.repository.update(id, note);
-        return await this.findById(id);
+    async update(id: string, note: Partial<Note>, userId: string): Promise<Note | null> {
+        await this.repository.update({ id, userId }, note);
+        return await this.findById(id, userId);
     }
 
-    async delete(id: string): Promise<void> {
-        await this.repository.delete(id);
+    async delete(id: string, userId: string): Promise<void> {
+        await this.repository.delete({ id, userId });
     }
 }

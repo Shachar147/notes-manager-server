@@ -3,6 +3,7 @@ import {sendError, sendSuccess} from "../../utils/response-utils";
 import {Note} from "./notes.entity";
 import { NotesService } from './notes.service';
 import {CreateNoteDto, NoteInterface} from "./notes.types";
+import { User } from '../auth/user.entity';
 
 const notesService = new NotesService();
 
@@ -16,7 +17,8 @@ function formatNote(note: Note): NoteInterface {
 
 export async function getNoteById(req: Request, res: Response): Promise<void> {
     try {
-        const note = await notesService.getNote(req.params.id);
+        const user = (req as any).user as User;
+        const note = await notesService.getNote(req.params.id, user.id);
         sendSuccess(req, res, formatNote(note));
     } catch (error: any) {
         console.error('Error fetching note:', error);
@@ -26,7 +28,8 @@ export async function getNoteById(req: Request, res: Response): Promise<void> {
 
 export async function getAllNotes(req: Request, res: Response): Promise<void> {
     try {
-        const notes = await notesService.getAllNotes();
+        const user = (req as any).user as User;
+        const notes = await notesService.getAllNotes(user.id);
         sendSuccess(req, res, notes.map(formatNote));
     } catch (error: any) {
         console.error('Error fetching notes:', error);
@@ -46,11 +49,10 @@ export async function createNote(req: Request<CreateNoteDto>, res: Response): Pr
             return;
         }
 
-        // TODO: Replace with actual user ID from authentication
-        const userId = '0';
+        const user = (req as any).user as User;
         const newNote = await notesService.createNote(
             { title, content: description },
-            userId
+            user.id
         );
         sendSuccess(req, res, formatNote(newNote), 201);
     } catch (error: any) {
@@ -72,9 +74,8 @@ export async function updateNote(req: Request, res: Response): Promise<void> {
         if (title) updatedFields.title = title;
         if (description) updatedFields.content = description;
 
-        // TODO: Replace with actual user ID from authentication
-        const userId = '0';
-        const updatedNote = await notesService.updateNote(noteId, updatedFields, userId);
+        const user = (req as any).user as User;
+        const updatedNote = await notesService.updateNote(noteId, updatedFields, user.id);
         sendSuccess(req, res, formatNote(updatedNote));
     } catch (error: any) {
         console.error('Error updating note:', error);
@@ -85,9 +86,8 @@ export async function updateNote(req: Request, res: Response): Promise<void> {
 export async function deleteNote(req: Request, res: Response): Promise<void> {
     try {
         const noteId = req.params.id;
-        // TODO: Replace with actual user ID from authentication
-        const userId = '0';
-        await notesService.deleteNote(noteId, userId);
+        const user = (req as any).user as User;
+        await notesService.deleteNote(noteId, user.id);
         sendSuccess(req, res, { message: `Note ${noteId} deleted successfully` }, 204);
     } catch (error: any) {
         console.error('Error deleting note:', error);
@@ -98,9 +98,8 @@ export async function deleteNote(req: Request, res: Response): Promise<void> {
 export async function duplicateNote(req: Request, res: Response): Promise<void> {
     try {
         const noteId = req.params.id;
-        // TODO: Replace with actual user ID from authentication
-        const userId = '0';
-        const duplicatedNote = await notesService.duplicateNote(noteId, userId);
+        const user = (req as any).user as User;
+        const duplicatedNote = await notesService.duplicateNote(noteId, user.id);
         sendSuccess(req, res, formatNote(duplicatedNote));
     } catch (error: any) {
         console.error('Error duplicating note:', error);

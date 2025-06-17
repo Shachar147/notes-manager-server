@@ -65,7 +65,15 @@ class AuditWorker {
                 }
             });
 
-            console.log('Audit worker started');
+            console.log(`
+    _             _ _ _    __        __         _             
+   / \\  _   _  __| (_) |_  \\ \\      / /__  _ __| | _____ _ __ 
+  / _ \\| | | |/ _\` | | __|  \\ \\ /\\ / / _ \\| '__| |/ / _ \\ '__|
+ / ___ \\ |_| | (_| | | |_    \\ V  V / (_) | |  |   <  __/ |   
+/_/   \\_\\__,_|\\__,_|_|\\__|    \\_/\\_/ \\___/|_|  |_|\\_\\___|_|   
+
+Notes Manager Audit Worker is running!
+`);
         } catch (error) {
             console.error('Failed to start audit worker:', error);
             throw error;
