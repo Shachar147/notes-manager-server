@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class UpdateExistingNotesWithUserId implements MigrationInterface {
-    name = 'UpdateExistingNotesWithUserId'
+export class UpdateExistingNotesWithUserId1750265015000 implements MigrationInterface {
+    name = 'UpdateExistingNotesWithUserId1750265015000'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         // Update all notes that don't have a userId to assign them to the specified user
