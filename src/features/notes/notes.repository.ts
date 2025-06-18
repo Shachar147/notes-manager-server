@@ -36,4 +36,10 @@ export class NoteRepository {
     async delete(id: string, userId: string): Promise<void> {
         await this.repository.delete({ id, userId });
     }
+
+    async count(userId: string): Promise<number> {
+        return await this.repository.count({
+            where: { userId }
+        });
+    }
 }

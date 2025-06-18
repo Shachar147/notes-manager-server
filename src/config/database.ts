@@ -14,7 +14,8 @@ const options: DataSourceOptions = {
     logging: false,
     entities: [Note, AuditLog, User],
     subscribers: [],
-    migrations: [],
+    migrations: ['src/migrations/*.ts'], // Add migrations path
+    migrationsTableName: 'migrations', // Migration table name
 };
 
 export const AppDataSource = new DataSource(options);

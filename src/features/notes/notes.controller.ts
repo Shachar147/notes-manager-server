@@ -29,8 +29,11 @@ export async function getNoteById(req: Request, res: Response): Promise<void> {
 export async function getAllNotes(req: Request, res: Response): Promise<void> {
     try {
         const user = (req as any).user as User;
-        const notes = await notesService.getAllNotes(user.id);
-        sendSuccess(req, res, notes.map(formatNote));
+        const { notes, total } = await notesService.getAllNotes(user.id);
+        sendSuccess(req, res, {
+            total,
+            notes: notes.map(formatNote)
+        });
     } catch (error: any) {
         console.error('Error fetching notes:', error);
         sendError(req, res, `Failed to fetch notes: ${error.message}`, 500, { "errorMessage": error.message, "excInfo": error.stack });
