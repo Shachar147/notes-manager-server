@@ -1,6 +1,6 @@
 export interface CreateNoteDto {
     title: string;
-    description: string;
+    content: string;
 }
 
 export interface NoteInterface {

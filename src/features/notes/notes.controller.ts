@@ -39,19 +39,19 @@ export async function getAllNotes(req: Request, res: Response): Promise<void> {
 
 export async function createNote(req: Request<CreateNoteDto>, res: Response): Promise<void> {
     try {
-        const { title, description } = req.body ?? {};
+        const { title, content } = req.body ?? {};
         if (!title) {
             sendError(req, res, 'Missing: title', 400);
             return;
         }
-        if (!description) {
-            sendError(req, res, 'Missing: description', 400);
+        if (!content) {
+            sendError(req, res, 'Missing: content', 400);
             return;
         }
 
         const user = (req as any).user as User;
         const newNote = await notesService.createNote(
-            { title, content: description },
+            { title, content },
             user
         );
         sendSuccess(req, res, formatNote(newNote), 201);
@@ -63,8 +63,8 @@ export async function createNote(req: Request<CreateNoteDto>, res: Response): Pr
 
 export async function updateNote(req: Request, res: Response): Promise<void> {
     try {
-        const { title, description } = req.body ?? {};
-        if (!title && !description) {
+        const { title, content } = req.body ?? {};
+        if (!title && !content) {
             sendError(req, res, 'Nothing to update', 400);
             return;
         }
@@ -72,7 +72,7 @@ export async function updateNote(req: Request, res: Response): Promise<void> {
         const noteId = req.params.id;
         const updatedFields: Partial<Note> = {};
         if (title) updatedFields.title = title;
-        if (description) updatedFields.content = description;
+        if (content != undefined) updatedFields.content = content;
 
         const user = (req as any).user as User;
         const updatedNote = await notesService.updateNote(noteId, updatedFields, user);
