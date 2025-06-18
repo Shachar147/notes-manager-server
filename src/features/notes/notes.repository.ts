@@ -1,6 +1,7 @@
 import { Repository } from 'typeorm';
 import { AppDataSource } from '../../config/database';
 import { Note } from './notes.entity';
+import {User} from "../auth/user.entity";
 
 export class NoteRepository {
     private repository: Repository<Note>;
@@ -9,7 +10,9 @@ export class NoteRepository {
         this.repository = AppDataSource.getRepository(Note);
     }
 
-    async create(note: Partial<Note>): Promise<Note> {
+    async create(note: Partial<Note>, user: User): Promise<Note> {
+        note.user = user;
+        note.userId = user.id;
         const newNote = this.repository.create(note);
         return await this.repository.save(newNote);
     }
@@ -25,9 +28,9 @@ export class NoteRepository {
         return await this.repository.findOneBy({ id, userId });
     }
 
-    async update(id: string, note: Partial<Note>, userId: string): Promise<Note | null> {
-        await this.repository.update({ id, userId }, note);
-        return await this.findById(id, userId);
+    async update(id: string, note: Partial<Note>, user: User): Promise<Note | null> {
+        await this.repository.update({ id, userId: user.id, user }, note);
+        return await this.findById(id, user.id);
     }
 
     async delete(id: string, userId: string): Promise<void> {

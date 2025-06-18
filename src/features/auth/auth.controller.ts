@@ -54,4 +54,13 @@ export class AuthController {
             return sendError(req, res, 'Internal server error', 500, error);
         }
     }
+
+    async getUsers(req: Request, res: Response) {
+        try {
+            const users = await this.authService.getAllUsers();
+            return sendSuccess(req, res, { users });
+        } catch (error) {
+            return sendError(req, res, 'Failed to fetch users', 500, error);
+        }
+    }
 } 

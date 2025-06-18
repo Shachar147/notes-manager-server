@@ -2,6 +2,7 @@ import { NoteRepository } from './notes.repository';
 import { Note } from './notes.entity';
 import { AuditService } from '../audit/audit.service';
 import { AuditTopic } from '../audit/audit.topics';
+import {User} from "../auth/user.entity";
 
 export class NotesService {
     private notesRepository: NoteRepository;
@@ -12,18 +13,18 @@ export class NotesService {
         this.auditService = new AuditService();
     }
 
-    async createNote(noteData: Partial<Note>, userId: string): Promise<Note> {
+    async createNote(noteData: Partial<Note>, user: User): Promise<Note> {
+
         const note = await this.notesRepository.create({
             ...noteData,
-            userId // Ensure the note is created with the user ID
-        });
+        }, user);
         
         // Log the creation event
         await this.auditService.logEvent(
             AuditTopic.NOTE_CREATED,
             'note',
             note.id,
-            userId,
+            user.id,
             undefined,
             note
         );
@@ -31,13 +32,13 @@ export class NotesService {
         return note;
     }
 
-    async updateNote(id: string, updates: Partial<Note>, userId: string): Promise<Note> {
-        const oldNote = await this.notesRepository.findById(id, userId);
+    async updateNote(id: string, updates: Partial<Note>, user: User): Promise<Note> {
+        const oldNote = await this.notesRepository.findById(id, user.id);
         if (!oldNote) {
             throw new Error(`Note with id ${id} not found`);
         }
 
-        const updatedNote = await this.notesRepository.update(id, updates, userId);
+        const updatedNote = await this.notesRepository.update(id, updates, user);
         if (!updatedNote) {
             throw new Error(`Failed to update note with id ${id}`);
         }
@@ -47,7 +48,7 @@ export class NotesService {
             AuditTopic.NOTE_UPDATED,
             'note',
             id,
-            userId,
+            user.id,
             oldNote,
             updatedNote
         );
@@ -74,8 +75,8 @@ export class NotesService {
         );
     }
 
-    async duplicateNote(id: string, userId: string): Promise<Note> {
-        const originalNote = await this.notesRepository.findById(id, userId);
+    async duplicateNote(id: string, user: User): Promise<Note> {
+        const originalNote = await this.notesRepository.findById(id, user.id);
         if (!originalNote) {
             throw new Error(`Note with id ${id} not found`);
         }
@@ -86,8 +87,7 @@ export class NotesService {
             updatedAt: undefined,
             id: undefined, // Let the database generate a new ID
             title: `${originalNote.title} (Copy)`,
-            userId // Ensure the duplicated note belongs to the same user
-        });
+        }, user);
 
         // Log the duplication event
         await this.auditService.logEvent(

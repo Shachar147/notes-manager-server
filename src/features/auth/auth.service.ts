@@ -8,6 +8,8 @@ export class AuthService {
     private userRepository = AppDataSource.getRepository(User);
 
     async register(email: string, password: string): Promise<{ user: User; token: string }> {
+        email = email.toLocaleLowerCase();
+
         // Check if user already exists
         const existingUser = await this.userRepository.findOne({ where: { email } });
         if (existingUser) {
@@ -20,7 +22,7 @@ export class AuthService {
 
         // Create new user
         const user = this.userRepository.create({
-            email,
+            email: email,
             password: hashedPassword,
             salt
         });
@@ -34,6 +36,7 @@ export class AuthService {
     }
 
     async login(email: string, password: string): Promise<{ user: User; token: string }> {
+        email = email.toLocaleLowerCase();
         const user = await this.userRepository.findOne({ where: { email } });
         if (!user) {
             throw new Error('User not found');
@@ -67,5 +70,10 @@ export class AuthService {
         } catch (error) {
             throw new Error('Invalid token');
         }
+    }
+
+    async getAllUsers(): Promise<{ id: string; email: string }[]> {
+        const users = await this.userRepository.find();
+        return users.map(user => ({ id: user.id, email: user.email }));
     }
 } 

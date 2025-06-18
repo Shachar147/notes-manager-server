@@ -52,7 +52,7 @@ export async function createNote(req: Request<CreateNoteDto>, res: Response): Pr
         const user = (req as any).user as User;
         const newNote = await notesService.createNote(
             { title, content: description },
-            user.id
+            user
         );
         sendSuccess(req, res, formatNote(newNote), 201);
     } catch (error: any) {
@@ -75,7 +75,7 @@ export async function updateNote(req: Request, res: Response): Promise<void> {
         if (description) updatedFields.content = description;
 
         const user = (req as any).user as User;
-        const updatedNote = await notesService.updateNote(noteId, updatedFields, user.id);
+        const updatedNote = await notesService.updateNote(noteId, updatedFields, user);
         sendSuccess(req, res, formatNote(updatedNote));
     } catch (error: any) {
         console.error('Error updating note:', error);
@@ -99,7 +99,7 @@ export async function duplicateNote(req: Request, res: Response): Promise<void> 
     try {
         const noteId = req.params.id;
         const user = (req as any).user as User;
-        const duplicatedNote = await notesService.duplicateNote(noteId, user.id);
+        const duplicatedNote = await notesService.duplicateNote(noteId, user);
         sendSuccess(req, res, formatNote(duplicatedNote));
     } catch (error: any) {
         console.error('Error duplicating note:', error);
