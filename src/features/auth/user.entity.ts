@@ -9,10 +9,10 @@ export class User {
     @Column({ unique: true })
     email: string;
 
-    @Column()
+    @Column({ nullable: true })  // if google login, it's nullable.
     password: string;
 
-    @Column()
+    @Column({ nullable: true })  // if google login, it's nullable.
     salt: string;
 
     @OneToMany(() => Note, note => note.user)
