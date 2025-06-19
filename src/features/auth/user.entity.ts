@@ -18,6 +18,12 @@ export class User {
     @OneToMany(() => Note, note => note.user)
     notes: Note[];
 
+    @Column({ nullable: true })
+    googleId?: string;
+  
+    @Column({ nullable: true })
+    profilePicture?: string;
+
     @CreateDateColumn()
     createdAt: Date;
 

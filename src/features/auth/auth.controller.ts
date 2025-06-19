@@ -1,6 +1,11 @@
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { sendSuccess, sendError } from '../../utils/response-utils';
+import { OAuth2Client } from 'google-auth-library';
+import logger from '../../utils/logger';
+
+const googleClientId = process.env.GOOGLE_CLIENT_ID;
+const googleClient = new OAuth2Client(googleClientId);
 
 export class AuthController {
     private authService: AuthService;
@@ -52,6 +57,41 @@ export class AuthController {
                 return sendError(req, res, 'Invalid credentials', 401);
             }
             return sendError(req, res, 'Internal server error', 500, error);
+        }
+    }
+
+    async loginWithGoogle(req: Request, res: Response) {
+        const { idToken } = req.body;
+        if (!idToken) {
+            return sendError(req, res, 'Missing idToken', 400)
+        }
+
+        try {
+            // 1. Verify Google ID Token
+            const ticket = await googleClient.verifyIdToken({
+                idToken,
+                audience: googleClientId,
+            });
+            const payload = ticket.getPayload();
+            if (!payload){
+                return sendError(req, res, 'User not found in google', 404)
+            }
+
+            const googleId = payload.sub;
+            const email = payload.email;
+            const name = payload.name;
+            const picture = payload.picture;
+
+            // 2. Find or create user
+            const user = await this.authService.upsertGoogleUser(googleId, email!, picture)
+
+            // 3. Create JWT
+            const token = this.authService.generateToken(user);
+
+            return sendSuccess(req, res, { token, user: { id: user.id, email: user.email, picture: user.profilePicture } });
+        } catch (err) {
+            logger.error('Google login error', err)
+            return sendError(req, res, 'Invalid Google Token', 401);
         }
     }
 
