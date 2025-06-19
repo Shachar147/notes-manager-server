@@ -26,7 +26,7 @@ export function sendError(req: Request<any, any, any, any>, res: Response, error
         stack: error?.stack,
         ...error
     };
-    logger.error(message, { error: errorDetails, requestId });
+    logger.error(message, { error: errorDetails, requestId, statusCode });
     return res.status(statusCode).json({
         "status": "error",
         "message": errorMessage,

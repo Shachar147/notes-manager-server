@@ -7,6 +7,29 @@ import { JWT_CONFIG } from '../../config/constants';
 export class AuthService {
     private userRepository = AppDataSource.getRepository(User);
 
+    async upsertGoogleUser(googleId: string, email: string, profilePicture?: string) {        
+        // 1. Try to find user by email
+        let user = await this.userRepository.findOne({ where: { email } });
+      
+        if (user) {
+          // 2. If found but googleId is not set, update it
+          if (!user.googleId) {
+            user.googleId = googleId;
+            if (profilePicture) user.profilePicture = profilePicture;
+            await this.userRepository.save(user);
+          }
+          return user;
+        }
+      
+        // 3. If not found, create new user
+        const newUser = this.userRepository.create({
+          email,
+          googleId,
+          profilePicture,
+        });
+        return await this.userRepository.save(newUser);
+      }      
+
     async register(email: string, password: string): Promise<{ user: User; token: string }> {
         email = email.toLocaleLowerCase();
 
@@ -51,7 +74,7 @@ export class AuthService {
         return { user, token };
     }
 
-    private generateToken(user: User): string {
+    public generateToken(user: User): string {
         return jwt.sign(
             { userId: user.id, email: user.email },
             JWT_CONFIG.SECRET,
@@ -74,6 +97,6 @@ export class AuthService {
 
     async getAllUsers(): Promise<{ id: string; email: string }[]> {
         const users = await this.userRepository.find();
-        return users.map(user => ({ id: user.id, email: user.email }));
+        return users.map(user => ({ id: user.id, email: user.email, googleId: user.googleId, profilePicture: user.profilePicture }));
     }
 } 

@@ -4,6 +4,8 @@ import { AuditTopic } from '../features/audit/audit.topics';
 import { rabbitMQService } from '../services/rabbitmq.service';
 import { AuditLogData } from '../features/audit/audit.types';
 import { AppDataSource } from '../config/database';
+import { asyncLocalStorage } from '../config/elasticsearch';
+import logger from '../utils/logger';
 
 class AuditWorker {
     private channel: amqp.Channel | null = null;
@@ -103,6 +105,7 @@ Notes Manager Audit Worker is running!
                 newData: data.newData,
                 metadata: data.metadata
         })
+        logger.info(`Created audit log for ${data.entityType} ${data.entityId}`);
     }
 
     async close() {
