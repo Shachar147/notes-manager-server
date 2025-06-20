@@ -4,8 +4,14 @@ import {Note} from "./notes.entity";
 import { NotesService } from './notes.service';
 import {CreateNoteDto, NoteInterface} from "./notes.types";
 import { User } from '../auth/user.entity';
+import logger from '../../utils/logger';
+import Redlock from 'redlock'; 
+import redisClient, { REDIS_LOCK_CONFIGURATION } from '../../config/redis';
+import { sleep } from '../../utils/utils'
 
+const redlock = new Redlock([redisClient], REDIS_LOCK_CONFIGURATION);
 const notesService = new NotesService();
+
 
 function formatNote(note: Note): NoteInterface {
     return {
@@ -73,16 +79,38 @@ export async function updateNote(req: Request, res: Response): Promise<void> {
         }
 
         const noteId = req.params.id;
-        const updatedFields: Partial<Note> = {};
-        if (title) updatedFields.title = title;
-        if (content != undefined) updatedFields.content = content;
 
-        const user = (req as any).user as User;
-        const updatedNote = await notesService.updateNote(noteId, updatedFields, user);
-        sendSuccess(req, res, formatNote(updatedNote));
+        // redis lock settings
+        const resource = `locks:note:${noteId}`;
+        const ttl = 5000;
+
+        let lock;
+        try {
+            logger.info(`[${noteId}] Attempting to acquire lock...`);
+            lock = await redlock.acquire([resource], ttl);
+            logger.info(`[${noteId}] Lock acquired!`);
+
+            const updatedFields: Partial<Note> = {};
+            if (title) updatedFields.title = title;
+            if (content != undefined) updatedFields.content = content;
+
+            const user = (req as any).user as User;
+            const updatedNote = await notesService.updateNote(noteId, updatedFields, user);
+            sendSuccess(req, res, formatNote(updatedNote));
+
+        } catch (error: any){
+            console.error('Error updating note:', error);
+            sendError(req, res, `Failed to update note: ${error.message}`, error.message.includes('not found') ? 404 : 500, { errorMessage: error.message, exc_info: error.stack });    
+        } 
+        finally {
+            if (lock){
+                await lock.release();
+                logger.info(`[${noteId}] Lock released.`);
+            }
+        }
     } catch (error: any) {
         console.error('Error updating note:', error);
-        sendError(req, res, `Failed to update note: ${error.message}`, error.message.includes('not found') ? 404 : 500, { errorMessage: error.message, exc_info: error.stack });
+        sendError(req, res, `Failed to update note (2): ${error.message}`, error.message.includes('not found') ? 404 : 500, { errorMessage: error.message, exc_info: error.stack });
     }
 }
 
