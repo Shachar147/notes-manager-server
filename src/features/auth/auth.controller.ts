@@ -3,8 +3,7 @@ import { AuthService } from './auth.service';
 import { sendSuccess, sendError } from '../../utils/response-utils';
 import { OAuth2Client } from 'google-auth-library';
 import logger from '../../utils/logger';
-import redisClient from '../../config/redis';
-
+import redisClient, { USERS_CACHE_TTL_SEC } from '../../config/redis';
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClient = new OAuth2Client(googleClientId);
@@ -109,7 +108,7 @@ export class AuthController {
 
             const users = await this.authService.getAllUsers();
 
-            await redisClient.set(cacheKey, JSON.stringify({ users }), 'EX', 60); // cache for 60s
+            await redisClient.set(cacheKey, JSON.stringify({ users }), 'EX', USERS_CACHE_TTL_SEC);
             return sendSuccess(req, res, { users });
         } catch (error) {
             return sendError(req, res, 'Failed to fetch users', 500, error);
