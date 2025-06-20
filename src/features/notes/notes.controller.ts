@@ -90,8 +90,6 @@ export async function updateNote(req: Request, res: Response): Promise<void> {
             lock = await redlock.acquire([resource], ttl);
             logger.info(`[${noteId}] Lock acquired!`);
 
-            await sleep(4000)
-
             const updatedFields: Partial<Note> = {};
             if (title) updatedFields.title = title;
             if (content != undefined) updatedFields.content = content;
