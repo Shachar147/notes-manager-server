@@ -11,7 +11,6 @@ const rateLimiter = new RateLimiterRedis({
 });
 
 const rateLimitMiddleware = async (req: Request, res: Response, next: NextFunction) => {
-    console.log("hereee");
     // @ts-ignore
   rateLimiter.consume(req.ip)
     .then(() => next())
