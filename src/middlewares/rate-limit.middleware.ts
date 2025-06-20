@@ -1,13 +1,13 @@
 import { RateLimiterRedis } from 'rate-limiter-flexible';
-import redisClient from '../config/redis';
+import redisClient, { PER_MINUTE, RATE_LIMITING_MAX_REQUESTS } from '../config/redis';
 import { sendError } from '../utils/response-utils';
 import { NextFunction } from 'express';
 
 const rateLimiter = new RateLimiterRedis({
   storeClient: redisClient,
   keyPrefix: 'middleware',
-  points: 15, // 30 requests
-  duration: 60, // per minute
+  points: RATE_LIMITING_MAX_REQUESTS,
+  duration: PER_MINUTE
 });
 
 const rateLimitMiddleware = async (req: Request, res: Response, next: NextFunction) => {
