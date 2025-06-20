@@ -6,12 +6,17 @@ const redis = new Redis({
 });
 export default redis;
 
-const USERS_CACHE_TTL_SEC = 60; // 60 sec
-const PER_MINUTE = 60; // per minute
-const RATE_LIMITING_MAX_REQUESTS = 15; // 15 requests
+// cache
+export const USERS_CACHE_TTL_SEC = 60; // 60 sec
 
-export { 
-    RATE_LIMITING_MAX_REQUESTS,
-    PER_MINUTE,
-    USERS_CACHE_TTL_SEC 
-};
+// rate limiting
+export const PER_MINUTE = 60; // per minute
+export const RATE_LIMITING_MAX_REQUESTS = 15; // 15 requests
+
+// locks
+export const REDIS_LOCK_CONFIGURATION =  {
+    retryCount: 30,           // number of times to retry
+    retryDelay: 200,          // time in ms between retries
+    retryJitter: 200,         // random ms added to retry delay
+    // You can increase retryCount or retryDelay to wait longer
+}

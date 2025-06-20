@@ -8,7 +8,7 @@ const esTransport = new ElasticsearchTransport({
     level: 'info',
     indexPrefix: 'app-logs',
     clientOpts: { node: ELASTICSEARCH_URL },
-    ensureMappingTemplate: true,
+    ensureIndexTemplate: true,
 });
 
 interface Store {
