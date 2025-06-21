@@ -10,10 +10,17 @@ export function createHandleChat(notesChatService: NotesChatService, usageServic
       if (!question) {
         return res.status(400).json({ error: 'Missing question' });
       }
+
+      console.log("looking for relevant notes");
+
       // Find relevant notes
       const notes = await notesChatService.findRelevantNotes(question, 3);
-      // TODO: Generate answer using Ollama (stub for now)
-      const answer = 'This is a placeholder answer. (Ollama integration needed)';
+      
+      console.log(`found ${notes.length} notes!`);
+
+      // Generate answer using Ollama
+      const answer = await notesChatService.generateChatResponse(question, notes);
+
       // Track usage for analytics (concurrently)
       await Promise.all(notes.map(note => usageService.recordUsage(note.id, question, userId)));
       // Return answer and links to notes
@@ -22,8 +29,9 @@ export function createHandleChat(notesChatService: NotesChatService, usageServic
         notes: notes.map(n => ({ id: n.id, title: n.title })),
       });
     } catch (err) {
-      logger.error('Error in /api/notes/chat:', err);
-      res.status(500).json({ error: 'Internal server error' });
+        console.error(err);
+        logger.error('Error in /api/notes/chat:', { message: (err as Error).message, stack: (err as Error).stack });
+        res.status(500).json({ error: 'Internal server error' });
     }
   };
 } 

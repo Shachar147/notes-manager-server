@@ -10,9 +10,7 @@ import {
 } from '../notes.controller';
 import { User } from '../../auth/user.entity';
 import { Note } from '../notes.entity';
-import { Request, Response } from 'express';
 import { NotesService } from '../notes.service';
-import { AuditService } from '../../audit/audit.service';
 
 // Mock console.error to suppress expected error logging during tests
 const originalConsoleError = console.error;

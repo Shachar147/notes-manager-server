@@ -2,14 +2,8 @@ import { NoteRepository } from './notes.repository';
 import { Note } from './notes.entity';
 import { AuditService } from '../audit/audit.service';
 import { AuditTopic } from '../audit/audit.topics';
-import {User} from "../auth/user.entity";
-import axios from 'axios';
+import { User } from '../auth/user.entity';
 import { NoteEmbeddingService } from './notes.embedding.service';
-import { aiConfig } from '../../config/ai';
-
-interface OllamaEmbeddingResponse {
-  embedding: number[];
-}
 
 export class NotesService {
     private notesRepository: NoteRepository;
@@ -20,17 +14,6 @@ export class NotesService {
         this.notesRepository = new NoteRepository();
         this.auditService = new AuditService();
         this.embeddingService = embeddingService;
-    }
-
-    async generateEmbedding(text: string): Promise<number[]> {
-        const response = await axios.post<OllamaEmbeddingResponse>(`${aiConfig.OLLAMA_URL}/api/embeddings`, {
-            model: 'nomic-embed-text',
-            prompt: text,
-        });
-        if (!response.data || !response.data.embedding) {
-            throw new Error('Failed to get embedding from Ollama');
-        }
-        return response.data.embedding;
     }
 
     async createNote(noteData: Partial<Note>, user: User): Promise<Note> {
@@ -49,7 +32,7 @@ export class NotesService {
         );
 
         const text = `${note.title}\n${note.content}`;
-        const embedding = await this.generateEmbedding(text);
+        const embedding = await this.embeddingService.generateEmbedding(text);
         await this.embeddingService.createOrUpdateEmbedding(note.id, embedding);
 
         return note;
@@ -77,7 +60,7 @@ export class NotesService {
         );
 
         const text = `${updatedNote.title}\n${updatedNote.content}`;
-        const embedding = await this.generateEmbedding(text);
+        const embedding = await this.embeddingService.generateEmbedding(text);
         await this.embeddingService.createOrUpdateEmbedding(updatedNote.id, embedding);
 
         return updatedNote;

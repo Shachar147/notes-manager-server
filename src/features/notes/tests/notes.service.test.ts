@@ -39,7 +39,7 @@ describe('NotesService', () => {
     (notesService as any).auditService = auditService;
 
     // Mock generateEmbedding to avoid network calls
-    jest.spyOn(notesService, 'generateEmbedding').mockResolvedValue([]);
+    embeddingService.generateEmbedding.mockResolvedValue([]);
   });
 
   afterEach(() => {
