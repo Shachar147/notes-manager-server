@@ -12,7 +12,6 @@ export function createHandleChat(notesChatService: NotesChatService, usageServic
       }
       // Find relevant notes
       const notes = await notesChatService.findRelevantNotes(question, 3);
-      console.log("hereee", question);
       // TODO: Generate answer using Ollama (stub for now)
       const answer = 'This is a placeholder answer. (Ollama integration needed)';
       // Track usage for analytics (concurrently)
