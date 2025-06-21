@@ -3,12 +3,30 @@
 import { getNoteById, getAllNotes, createNote, updateNote, deleteNote, duplicateNote, notesService } from '../notes.controller';
 import { User } from '../../auth/user.entity';
 import { Note } from '../notes.entity';
+import { Request, Response } from 'express';
+import { NotesService } from '../notes.service';
+import { AuditService } from '../../audit/audit.service';
+
+// Mock console.error to suppress expected error logging during tests
+const originalConsoleError = console.error;
+beforeAll(() => {
+  console.error = jest.fn();
+});
+
+afterAll(() => {
+  console.error = originalConsoleError;
+});
 
 // Mock the response-utils module
 jest.mock('../../../utils/response-utils', () => ({
   sendSuccess: jest.fn(),
   sendError: jest.fn()
 }));
+
+jest.mock('../notes.service');
+jest.mock('../../audit/audit.service');
+
+const { sendSuccess, sendError } = require('../../../utils/response-utils');
 
 const mockUser: User = { id: 'user1', email: 'test@example.com' } as any;
 const mockNote: Note = {

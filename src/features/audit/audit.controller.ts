@@ -25,8 +25,8 @@ export class AuditController {
             const { entityType } = req.params;
             const history = await this.auditService.getEntityTypeHistory(entityType);
             res.json(history);
-        } catch (error) {
-            sendError(res, 'Failed to fetch entity history', 500, { errorMessage: error.message, exc_info: error.stack })
+        } catch (error: any) {
+            sendError(req, res, 'Failed to fetch entity history', 500, { errorMessage: error.message, exc_info: error.stack })
         }
     }
 
