@@ -10,7 +10,7 @@ import redisClient, { REDIS_LOCK_CONFIGURATION } from '../../config/redis';
 import { sleep } from '../../utils/utils'
 
 const redlock = new Redlock([redisClient], REDIS_LOCK_CONFIGURATION);
-const notesService = new NotesService();
+export const notesService = new NotesService();
 
 
 function formatNote(note: Note): NoteInterface {
