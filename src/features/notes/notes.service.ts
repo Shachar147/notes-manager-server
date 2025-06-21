@@ -3,18 +3,37 @@ import { Note } from './notes.entity';
 import { AuditService } from '../audit/audit.service';
 import { AuditTopic } from '../audit/audit.topics';
 import {User} from "../auth/user.entity";
+import axios from 'axios';
+import { NoteEmbeddingService } from './notes.embedding.service';
+import { aiConfig } from '../../config/ai';
+
+interface OllamaEmbeddingResponse {
+  embedding: number[];
+}
 
 export class NotesService {
     private notesRepository: NoteRepository;
     private auditService: AuditService;
+    private embeddingService: NoteEmbeddingService;
 
-    constructor() {
+    constructor(embeddingService: NoteEmbeddingService) {
         this.notesRepository = new NoteRepository();
         this.auditService = new AuditService();
+        this.embeddingService = embeddingService;
+    }
+
+    async generateEmbedding(text: string): Promise<number[]> {
+        const response = await axios.post<OllamaEmbeddingResponse>(`${aiConfig.OLLAMA_URL}/api/embeddings`, {
+            model: 'nomic-embed-text',
+            prompt: text,
+        });
+        if (!response.data || !response.data.embedding) {
+            throw new Error('Failed to get embedding from Ollama');
+        }
+        return response.data.embedding;
     }
 
     async createNote(noteData: Partial<Note>, user: User): Promise<Note> {
-
         const note = await this.notesRepository.create({
             ...noteData,
         }, user);
@@ -28,6 +47,10 @@ export class NotesService {
             undefined,
             note
         );
+
+        const text = `${note.title}\n${note.content}`;
+        const embedding = await this.generateEmbedding(text);
+        await this.embeddingService.createOrUpdateEmbedding(note.id, embedding);
 
         return note;
     }
@@ -52,6 +75,10 @@ export class NotesService {
             oldNote,
             updatedNote
         );
+
+        const text = `${updatedNote.title}\n${updatedNote.content}`;
+        const embedding = await this.generateEmbedding(text);
+        await this.embeddingService.createOrUpdateEmbedding(updatedNote.id, embedding);
 
         return updatedNote;
     }

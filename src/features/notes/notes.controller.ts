@@ -8,10 +8,9 @@ import logger from '../../utils/logger';
 import Redlock from 'redlock'; 
 import redisClient, { REDIS_LOCK_CONFIGURATION } from '../../config/redis';
 import { sleep } from '../../utils/utils'
+import { NoteEmbeddingService } from './notes.embedding.service';
 
 const redlock = new Redlock([redisClient], REDIS_LOCK_CONFIGURATION);
-export const notesService = new NotesService();
-
 
 function formatNote(note: Note): NoteInterface {
     return {
@@ -21,7 +20,8 @@ function formatNote(note: Note): NoteInterface {
     } as NoteInterface;
 }
 
-export async function getNoteById(req: Request, res: Response): Promise<void> {
+// Factory functions to inject dependencies
+export const createGetNoteById = (notesService: NotesService) => async (req: Request, res: Response) => {
     try {
         const user = (req as any).user as User;
         const note = await notesService.getNote(req.params.id, user.id);
@@ -30,9 +30,9 @@ export async function getNoteById(req: Request, res: Response): Promise<void> {
         console.error('Error fetching note:', error);
         sendError(req, res, `Failed to fetch note: ${error.message}`, error.message.includes('not found') ? 404 : 500, { errorMessage: error.message, exc_info: error.stack });
     }
-}
+};
 
-export async function getAllNotes(req: Request, res: Response): Promise<void> {
+export const createGetAllNotes = (notesService: NotesService) => async (req: Request, res: Response) => {
     try {
         const user = (req as any).user as User;
         const { notes, total } = await notesService.getAllNotes(user.id);
@@ -44,9 +44,9 @@ export async function getAllNotes(req: Request, res: Response): Promise<void> {
         console.error('Error fetching notes:', error);
         sendError(req, res, `Failed to fetch notes: ${error.message}`, 500, { "errorMessage": error.message, "excInfo": error.stack });
     }
-}
+};
 
-export async function createNote(req: Request<CreateNoteDto>, res: Response): Promise<void> {
+export const createCreateNote = (notesService: NotesService) => async (req: Request<CreateNoteDto>, res: Response) => {
     try {
         const { title, content } = req.body ?? {};
         if (!title) {
@@ -68,9 +68,9 @@ export async function createNote(req: Request<CreateNoteDto>, res: Response): Pr
         console.error('Error creating note:', error);
         sendError(req, res, `Failed to create note: ${error.message}`, 500, { errorMessage: error.message, exc_info: error.stack });
     }
-}
+};
 
-export async function updateNote(req: Request, res: Response): Promise<void> {
+export const createUpdateNote = (notesService: NotesService, redlock: Redlock) => async (req: Request, res: Response) => {
     try {
         const { title, content } = req.body ?? {};
         if (!title && !content) {
@@ -112,9 +112,9 @@ export async function updateNote(req: Request, res: Response): Promise<void> {
         console.error('Error updating note:', error);
         sendError(req, res, `Failed to update note (2): ${error.message}`, error.message.includes('not found') ? 404 : 500, { errorMessage: error.message, exc_info: error.stack });
     }
-}
+};
 
-export async function deleteNote(req: Request, res: Response): Promise<void> {
+export const createDeleteNote = (notesService: NotesService) => async (req: Request, res: Response) => {
     try {
         const noteId = req.params.id;
         const user = (req as any).user as User;
@@ -124,9 +124,9 @@ export async function deleteNote(req: Request, res: Response): Promise<void> {
         console.error('Error deleting note:', error);
         sendError(req, res, `Failed to delete note: ${error.message}`, error.message.includes('not found') ? 404 : 500, { errorMessage: error.message, exc_info: error.stack });
     }
-}
+};
 
-export async function duplicateNote(req: Request, res: Response): Promise<void> {
+export const createDuplicateNote = (notesService: NotesService) => async (req: Request, res: Response) => {
     try {
         const noteId = req.params.id;
         const user = (req as any).user as User;
@@ -136,4 +136,4 @@ export async function duplicateNote(req: Request, res: Response): Promise<void> 
         console.error('Error duplicating note:', error);
         sendError(req, res, `Failed to duplicate note: ${error.message}`, error.message.includes('not found') ? 404 : 500, { errorMessage: error.message, exc_info: error.stack });
     }
-}
+};

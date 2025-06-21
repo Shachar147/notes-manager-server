@@ -33,7 +33,7 @@ app.use('/auth', authRoutes);
 app.use('/notes', rateLimitMiddleware, authMiddleware, notesRoutes);
 app.use('/audit', rateLimitMiddleware, authMiddleware, auditRoutes);
 
-// Chat route (no auth, public)
+// Chat route
 AppDataSource.initialize().then(() => {
   const noteRepo = AppDataSource.getRepository(Note);
   const embeddingRepo = AppDataSource.getRepository(NoteEmbedding) as any as NoteEmbeddingRepository;

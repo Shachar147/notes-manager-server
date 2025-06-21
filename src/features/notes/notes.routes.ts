@@ -1,20 +1,30 @@
 import { Router } from 'express';
 import {
-    getNoteById,
-    getAllNotes,
-    createNote,
-    updateNote,
-    deleteNote,
-    duplicateNote
+    createGetNoteById,
+    createGetAllNotes,
+    createCreateNote,
+    createUpdateNote,
+    createDeleteNote,
+    createDuplicateNote
 } from './notes.controller';
+import { NotesService } from './notes.service';
+import { NoteEmbeddingService } from './notes.embedding.service';
+import Redlock from 'redlock';
+import redisClient from '../../config/redis';
+
+const redlock = new Redlock([redisClient]);
+
+// This is a placeholder. In a real app, the repository would be injected.
+const embeddingService = new NoteEmbeddingService({} as any); 
+const notesService = new NotesService(embeddingService);
 
 const router = Router();
 
-router.get('/', getAllNotes);
-router.get('/:id', getNoteById);
-router.post('/', createNote);
-router.put('/:id', updateNote);
-router.delete('/:id', deleteNote);
-router.post('/:id/duplicate', duplicateNote);
+router.get('/', createGetAllNotes(notesService));
+router.get('/:id', createGetNoteById(notesService));
+router.post('/', createCreateNote(notesService));
+router.put('/:id', createUpdateNote(notesService, redlock));
+router.delete('/:id', createDeleteNote(notesService));
+router.post('/:id/duplicate', createDuplicateNote(notesService));
 
 export default router;

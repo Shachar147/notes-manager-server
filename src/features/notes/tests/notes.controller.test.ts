@@ -1,6 +1,13 @@
 // Jest unit tests for notes.controller.ts 
 
-import { getNoteById, getAllNotes, createNote, updateNote, deleteNote, duplicateNote, notesService } from '../notes.controller';
+import {
+    createGetNoteById,
+    createGetAllNotes,
+    createCreateNote,
+    createUpdateNote,
+    createDeleteNote,
+    createDuplicateNote
+} from '../notes.controller';
 import { User } from '../../auth/user.entity';
 import { Note } from '../notes.entity';
 import { Request, Response } from 'express';
@@ -50,29 +57,21 @@ function mockRes(): any {
 describe('notes.controller', () => {
   let req: any;
   let res: any;
-  let sendSuccess: jest.MockedFunction<any>;
-  let sendError: jest.MockedFunction<any>;
+  let mockNotesService: jest.Mocked<NotesService>;
 
   beforeEach(() => {
     req = { params: {}, body: {}, user: mockUser };
     res = mockRes();
-
-    // Get the mocked functions
-    const responseUtils = require('../../../utils/response-utils');
-    sendSuccess = responseUtils.sendSuccess;
-    sendError = responseUtils.sendError;
-
-    // Reset mocks
-    sendSuccess.mockClear();
-    sendError.mockClear();
-
-    // Mock the singleton instance methods
-    jest.spyOn(notesService, 'getNote').mockResolvedValue(mockNote);
-    jest.spyOn(notesService, 'getAllNotes').mockResolvedValue({ notes: [mockNote], total: 1 });
-    jest.spyOn(notesService, 'createNote').mockResolvedValue(mockNote);
-    jest.spyOn(notesService, 'updateNote').mockResolvedValue({ ...mockNote, title: 'Updated' });
-    jest.spyOn(notesService, 'deleteNote').mockResolvedValue(undefined);
-    jest.spyOn(notesService, 'duplicateNote').mockResolvedValue({ ...mockNote, id: 'note2', title: 'Test Note (Copy)' });
+    
+    // Create a fresh mock for each test
+    mockNotesService = {
+        getNote: jest.fn().mockResolvedValue(mockNote),
+        getAllNotes: jest.fn().mockResolvedValue({ notes: [mockNote], total: 1 }),
+        createNote: jest.fn().mockResolvedValue(mockNote),
+        updateNote: jest.fn().mockResolvedValue({ ...mockNote, title: 'Updated' }),
+        deleteNote: jest.fn().mockResolvedValue(undefined),
+        duplicateNote: jest.fn().mockResolvedValue({ ...mockNote, id: 'note2', title: 'Test Note (Copy)' }),
+    } as any;
   });
 
   afterEach(() => {
@@ -82,13 +81,15 @@ describe('notes.controller', () => {
   describe('getNoteById', () => {
     it('should return a note', async () => {
       req.params.id = 'note1';
+      const getNoteById = createGetNoteById(mockNotesService);
       await getNoteById(req, res);
-      expect(notesService.getNote).toHaveBeenCalledWith('note1', mockUser.id);
+      expect(mockNotesService.getNote).toHaveBeenCalledWith('note1', mockUser.id);
       expect(sendSuccess).toHaveBeenCalledWith(req, res, expect.objectContaining({ id: 'note1' }));
     });
     it('should handle not found error', async () => {
       req.params.id = 'note1';
-      (notesService.getNote as jest.Mock).mockRejectedValueOnce(new Error('Note with id note1 not found'));
+      (mockNotesService.getNote as jest.Mock).mockRejectedValueOnce(new Error('Note with id note1 not found'));
+      const getNoteById = createGetNoteById(mockNotesService);
       await getNoteById(req, res);
       expect(sendError).toHaveBeenCalledWith(
         req, 
@@ -102,15 +103,17 @@ describe('notes.controller', () => {
 
   describe('getAllNotes', () => {
     it('should return all notes', async () => {
+      const getAllNotes = createGetAllNotes(mockNotesService);
       await getAllNotes(req, res);
-      expect(notesService.getAllNotes).toHaveBeenCalledWith(mockUser.id);
+      expect(mockNotesService.getAllNotes).toHaveBeenCalledWith(mockUser.id);
       expect(sendSuccess).toHaveBeenCalledWith(req, res, expect.objectContaining({ 
         total: 1, 
         notes: expect.any(Array) 
       }));
     });
     it('should handle error', async () => {
-      (notesService.getAllNotes as jest.Mock).mockRejectedValueOnce(new Error('DB error'));
+      (mockNotesService.getAllNotes as jest.Mock).mockRejectedValueOnce(new Error('DB error'));
+      const getAllNotes = createGetAllNotes(mockNotesService);
       await getAllNotes(req, res);
       expect(sendError).toHaveBeenCalledWith(
         req, 
@@ -125,23 +128,27 @@ describe('notes.controller', () => {
   describe('createNote', () => {
     it('should create a note', async () => {
       req.body = { title: 'Test Note', content: 'Test Content' };
+      const createNote = createCreateNote(mockNotesService);
       await createNote(req, res);
-      expect(notesService.createNote).toHaveBeenCalledWith({ title: 'Test Note', content: 'Test Content' }, mockUser);
+      expect(mockNotesService.createNote).toHaveBeenCalledWith({ title: 'Test Note', content: 'Test Content' }, mockUser);
       expect(sendSuccess).toHaveBeenCalledWith(req, res, expect.objectContaining({ id: 'note1' }), 201);
     });
     it('should handle missing title', async () => {
       req.body = { content: 'Test Content' };
+      const createNote = createCreateNote(mockNotesService);
       await createNote(req, res);
       expect(sendError).toHaveBeenCalledWith(req, res, 'Missing: title', 400);
     });
     it('should handle missing content', async () => {
       req.body = { title: 'Test Note' };
+      const createNote = createCreateNote(mockNotesService);
       await createNote(req, res);
       expect(sendError).toHaveBeenCalledWith(req, res, 'Missing: content', 400);
     });
     it('should handle error', async () => {
       req.body = { title: 'Test Note', content: 'Test Content' };
-      (notesService.createNote as jest.Mock).mockRejectedValueOnce(new Error('DB error'));
+      (mockNotesService.createNote as jest.Mock).mockRejectedValueOnce(new Error('DB error'));
+      const createNote = createCreateNote(mockNotesService);
       await createNote(req, res);
       expect(sendError).toHaveBeenCalledWith(
         req, 
@@ -158,24 +165,26 @@ describe('notes.controller', () => {
       req.params.id = 'note1';
       req.body = { title: 'Updated' };
       // Mock lock acquire/release
-      const redlock = { acquire: jest.fn().mockResolvedValue({ release: jest.fn() }) };
-      (updateNote as any).redlock = redlock;
+      const redlock = { acquire: jest.fn().mockResolvedValue({ release: jest.fn() }) } as any;
+      const updateNote = createUpdateNote(mockNotesService, redlock);
       await updateNote(req, res);
-      expect(notesService.updateNote).toHaveBeenCalledWith('note1', { title: 'Updated' }, mockUser);
+      expect(mockNotesService.updateNote).toHaveBeenCalledWith('note1', { title: 'Updated' }, mockUser);
       expect(sendSuccess).toHaveBeenCalledWith(req, res, expect.objectContaining({ title: 'Updated' }));
     });
     it('should handle nothing to update', async () => {
       req.body = {};
+      const redlock = { acquire: jest.fn() } as any;
+      const updateNote = createUpdateNote(mockNotesService, redlock);
       await updateNote(req, res);
       expect(sendError).toHaveBeenCalledWith(req, res, 'Nothing to update', 400);
     });
     it('should handle update error', async () => {
       req.params.id = 'note1';
       req.body = { title: 'Updated' };
-      (notesService.updateNote as jest.Mock).mockRejectedValueOnce(new Error('Note with id note1 not found'));
+      (mockNotesService.updateNote as jest.Mock).mockRejectedValueOnce(new Error('Note with id note1 not found'));
       // Mock lock acquire/release
-      const redlock = { acquire: jest.fn().mockResolvedValue({ release: jest.fn() }) };
-      (updateNote as any).redlock = redlock;
+      const redlock = { acquire: jest.fn().mockResolvedValue({ release: jest.fn() }) } as any;
+      const updateNote = createUpdateNote(mockNotesService, redlock);
       await updateNote(req, res);
       expect(sendError).toHaveBeenCalledWith(
         req, 
@@ -190,13 +199,15 @@ describe('notes.controller', () => {
   describe('deleteNote', () => {
     it('should delete a note', async () => {
       req.params.id = 'note1';
+      const deleteNote = createDeleteNote(mockNotesService);
       await deleteNote(req, res);
-      expect(notesService.deleteNote).toHaveBeenCalledWith('note1', mockUser.id);
+      expect(mockNotesService.deleteNote).toHaveBeenCalledWith('note1', mockUser.id);
       expect(sendSuccess).toHaveBeenCalledWith(req, res, { message: 'Note note1 deleted successfully' }, 204);
     });
     it('should handle error', async () => {
       req.params.id = 'note1';
-      (notesService.deleteNote as jest.Mock).mockRejectedValueOnce(new Error('Note with id note1 not found'));
+      (mockNotesService.deleteNote as jest.Mock).mockRejectedValueOnce(new Error('Note with id note1 not found'));
+      const deleteNote = createDeleteNote(mockNotesService);
       await deleteNote(req, res);
       expect(sendError).toHaveBeenCalledWith(
         req, 
@@ -211,8 +222,9 @@ describe('notes.controller', () => {
   describe('duplicateNote', () => {
     it('should duplicate a note', async () => {
       req.params.id = 'note1';
+      const duplicateNote = createDuplicateNote(mockNotesService);
       await duplicateNote(req, res);
-      expect(notesService.duplicateNote).toHaveBeenCalledWith('note1', mockUser);
+      expect(mockNotesService.duplicateNote).toHaveBeenCalledWith('note1', mockUser);
       expect(sendSuccess).toHaveBeenCalledWith(req, res, expect.objectContaining({ 
         id: 'note2', 
         title: 'Test Note (Copy)' 
@@ -220,7 +232,8 @@ describe('notes.controller', () => {
     });
     it('should handle error', async () => {
       req.params.id = 'note1';
-      (notesService.duplicateNote as jest.Mock).mockRejectedValueOnce(new Error('Note with id note1 not found'));
+      (mockNotesService.duplicateNote as jest.Mock).mockRejectedValueOnce(new Error('Note with id note1 not found'));
+      const duplicateNote = createDuplicateNote(mockNotesService);
       await duplicateNote(req, res);
       expect(sendError).toHaveBeenCalledWith(
         req, 
