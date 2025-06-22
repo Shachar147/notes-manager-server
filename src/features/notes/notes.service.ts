@@ -4,16 +4,20 @@ import { AuditService } from '../audit/audit.service';
 import { AuditTopic } from '../audit/audit.topics';
 import { User } from '../auth/user.entity';
 import { NoteEmbeddingService } from './notes.embedding.service';
+import { rabbitMQService, RabbitMQService } from '../../services/rabbitmq.service';
+import { NoteTopic } from './notes.topics';
 
 export class NotesService {
     private notesRepository: NoteRepository;
     private auditService: AuditService;
     private embeddingService: NoteEmbeddingService;
+    private rabbitmqService: RabbitMQService;
 
-    constructor(embeddingService: NoteEmbeddingService) {
+    constructor(embeddingService: NoteEmbeddingService, rabbitmqService: RabbitMQService) {
         this.notesRepository = new NoteRepository();
         this.auditService = new AuditService();
         this.embeddingService = embeddingService;
+        this.rabbitmqService = rabbitmqService;
     }
 
     async createNote(noteData: Partial<Note>, user: User): Promise<Note> {
@@ -31,9 +35,9 @@ export class NotesService {
             note
         );
 
-        const text = `${note.title}\n${note.content}`;
-        const embedding = await this.embeddingService.generateEmbedding(text);
-        await this.embeddingService.createOrUpdateEmbedding(note.id, embedding);
+        // Publish event to RabbitMQ
+        console.log("about to publish note created event");
+        await rabbitMQService.publishEvent(NoteTopic.NOTE_CREATED, note);
 
         return note;
     }
@@ -59,9 +63,8 @@ export class NotesService {
             updatedNote
         );
 
-        const text = `${updatedNote.title}\n${updatedNote.content}`;
-        const embedding = await this.embeddingService.generateEmbedding(text);
-        await this.embeddingService.createOrUpdateEmbedding(updatedNote.id, embedding);
+        // Publish event to RabbitMQ
+        await rabbitMQService.publishEvent(NoteTopic.NOTE_UPDATED, updatedNote);
 
         return updatedNote;
     }
@@ -71,6 +74,8 @@ export class NotesService {
         if (!note) {
             throw new Error(`Note with id ${id} not found`);
         }
+
+        await this.embeddingService.delete(id);
 
         await this.notesRepository.delete(id, userId);
 

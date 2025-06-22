@@ -9,14 +9,19 @@ import {
 } from './notes.controller';
 import { NotesService } from './notes.service';
 import { NoteEmbeddingService } from './notes.embedding.service';
+import { NoteEmbeddingRepository } from './notes.embedding.repository';
+import { NoteEmbedding } from './notes.embedding.entity';
+import { rabbitMQService } from '../../services/rabbitmq.service';
 import Redlock from 'redlock';
 import redisClient from '../../config/redis';
+import { AppDataSource } from '../../config/database';
 
 const redlock = new Redlock([redisClient]);
 
-// This is a placeholder. In a real app, the repository would be injected.
-const embeddingService = new NoteEmbeddingService({} as any); 
-const notesService = new NotesService(embeddingService);
+// Initialize services with proper dependencies
+const noteEmbeddingRepository = new NoteEmbeddingRepository(NoteEmbedding, AppDataSource.manager);
+const embeddingService = new NoteEmbeddingService(noteEmbeddingRepository);
+const notesService = new NotesService(embeddingService, rabbitMQService);
 
 const router = Router();
 

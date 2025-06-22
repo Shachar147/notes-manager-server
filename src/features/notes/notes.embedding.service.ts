@@ -14,6 +14,12 @@ export class NoteEmbeddingService {
     this.embeddingRepo = embeddingRepo;
   }
 
+  async delete(noteId: string) {
+    await this.embeddingRepo.delete({
+        noteId
+    })
+  }
+
   async generateEmbedding(text: string): Promise<number[]> {
     const response = await axios.post<OllamaEmbeddingResponse>(`${aiConfig.OLLAMA_URL}/api/embeddings`, {
       model: aiConfig.OLLAMA_EMBEDDING_MODEL,

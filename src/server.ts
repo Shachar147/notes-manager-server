@@ -2,6 +2,9 @@ import 'reflect-metadata';
 import { AppDataSource } from './config/database';
 import app from './app';
 import { rabbitMQService } from './services/rabbitmq.service';
+import { NoteEmbeddingService } from './features/notes/notes.embedding.service';
+import { NoteEmbeddingRepository } from './features/notes/notes.embedding.repository';
+import { NoteEmbedding } from './features/notes/notes.embedding.entity';
 
 const PORT = process.env.PORT || 3001;
 
@@ -9,6 +12,10 @@ AppDataSource.initialize()
     .then(async () => {
         console.log('Database connected successfully');
         await rabbitMQService.connect();
+
+        // Initialize services and listeners
+        const noteEmbeddingRepository = new NoteEmbeddingRepository(NoteEmbedding, AppDataSource.manager);
+        new NoteEmbeddingService(noteEmbeddingRepository);
 
         app.listen(PORT, () => {
             console.log(`

@@ -8,6 +8,15 @@ import { User } from '../../auth/user.entity';
 import { Note } from '../notes.entity';
 import { NoteEmbeddingService } from '../notes.embedding.service';
 
+// Mock the rabbitMQService module
+jest.mock('../../../services/rabbitmq.service', () => ({
+  rabbitMQService: {
+    publishEvent: jest.fn().mockResolvedValue(undefined),
+    getChannel: jest.fn().mockResolvedValue({ publish: jest.fn() }),
+    connect: jest.fn().mockResolvedValue(undefined)
+  }
+}));
+
 jest.mock('../notes.repository');
 jest.mock('../../audit/audit.service');
 jest.mock('../notes.embedding.service');
@@ -33,13 +42,20 @@ describe('NotesService', () => {
     notesRepository = new (NoteRepository as any)();
     auditService = new (AuditService as any)();
     embeddingService = new (NoteEmbeddingService as any)();
-    notesService = new NotesService(embeddingService);
+    const mockChannel = { publish: jest.fn() };
+    const mockRabbitMQService = { 
+      getChannel: jest.fn().mockResolvedValue(mockChannel),
+      connect: jest.fn().mockResolvedValue(undefined)
+    };
+    notesService = new NotesService(embeddingService, mockRabbitMQService as any);
     // Inject mocks
     (notesService as any).notesRepository = notesRepository;
     (notesService as any).auditService = auditService;
 
     // Mock generateEmbedding to avoid network calls
     embeddingService.generateEmbedding.mockResolvedValue([]);
+    // Mock delete method
+    embeddingService.delete = jest.fn().mockResolvedValue(undefined);
   });
 
   afterEach(() => {

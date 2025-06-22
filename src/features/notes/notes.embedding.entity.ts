@@ -1,7 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn, Unique } from 'typeorm';
 import { Note } from './notes.entity';
 
 @Entity()
+@Unique(['noteId'])
 export class NoteEmbedding {
     @PrimaryGeneratedColumn('uuid')
     id: string;
