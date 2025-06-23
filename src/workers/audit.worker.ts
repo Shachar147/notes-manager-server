@@ -95,6 +95,19 @@ Notes Manager Audit Worker is running!
         console.log("Receieved", {
             data
         })
+        // Validation for required fields
+        if (!data.eventType || !data.entityType || !data.entityId) {
+            const logData = {
+                eventType: data.eventType,
+                entityType: data.entityType,
+                entityId: data.entityId,
+                userId: data.userId,
+                data
+            };
+            console.error('Missing required audit log fields', logData);
+            logger.error('Missing required audit log fields', logData);
+            return; // Skip writing to DB
+        }
         // Write to DB using AuditService
         await this.auditService.createAuditLog({
                 eventType: data.eventType,

@@ -30,15 +30,22 @@ class NotesWorker {
             await rabbitMQService.connect();
             this.channel = rabbitMQService.getChannel();
 
-            await this.channel.assertExchange(this.exchangeName, 'topic', { durable: true });
-            await this.channel.assertQueue(this.queueName, { durable: true });
+            // Create queue
+            await this.channel.assertQueue(this.queueName, {
+                durable: true
+            });
 
-            for (const topic of Object.values(NoteTopic)) {
-                await this.channel.bindQueue(this.queueName, this.exchangeName, topic);
+            // Bind queue to exchange with all audit event patterns
+            const eventTypes = Object.values(NoteTopic);
+            for (const eventType of eventTypes) {
+                await this.channel.bindQueue(this.queueName, this.exchangeName, eventType);
             }
-            logger.info('Notes worker connected to RabbitMQ');
-        } catch (error) {
-            logger.error('Failed to connect to RabbitMQ for notes worker:', error);
+
+            console.log(`
+                                                                   
+            Notes Manager Notes Worker is running!
+            `);        } catch (error) {
+            console.error('Failed to connect to RabbitMQ:', error);
             throw error;
         }
     }
@@ -84,7 +91,7 @@ Notes Manager Notes Worker is running!
         if (handler) {
             await handler(data);
         } else {
-            logger.warn(`No handler for topic in notes worker: ${topic}`);
+            console.warn(`No handler for topic in notes worker: ${topic}`);
         }
     }
 
@@ -106,17 +113,34 @@ Notes Manager Notes Worker is running!
     }
 }
 
-async function main() {
-    try {
-        await AppDataSource.initialize();
-        logger.info('Database connected successfully for Notes Worker');
+// Start the worker and initialize DB connection
+AppDataSource.initialize()
+    .then(() => {
+        console.log('Database connected successfully for Audit Worker');
         const worker = new NotesWorker();
-        await worker.connect();
-        await worker.start();
-    } catch (error) {
-        logger.error('Failed to initialize and start Notes Worker:', error);
+        worker.connect()
+            .then(() => worker.start())
+            .catch(error => {
+                console.error('Failed to start worker:', error);
+                process.exit(1);
+            });
+    })
+    .catch((error) => {
+        console.error('TypeORM connection error in Audit Worker: ', error);
         process.exit(1);
-    }
-}
+    });
 
-main(); 
+
+// Handle graceful shutdown
+process.on('SIGTERM', async () => {
+    console.log('Received SIGTERM. Closing worker...');
+    // No need to close individual worker connection, rabbitMQService handles it
+    await rabbitMQService.close(); // Ensure rabbitMQService connection is closed
+    process.exit(0);
+});
+
+process.on('SIGINT', async () => {
+    console.log('Received SIGINT. Closing worker...');
+    await rabbitMQService.close(); // Ensure rabbitMQService connection is closed
+    process.exit(0);
+}); 
