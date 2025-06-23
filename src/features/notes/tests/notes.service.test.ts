@@ -47,7 +47,8 @@ describe('NotesService', () => {
       getChannel: jest.fn().mockResolvedValue(mockChannel),
       connect: jest.fn().mockResolvedValue(undefined)
     };
-    notesService = new NotesService(embeddingService, mockRabbitMQService as any);
+    const mockUsageService = { deleteByNoteId: jest.fn().mockResolvedValue(undefined) };
+    notesService = new NotesService(embeddingService, mockRabbitMQService as any, mockUsageService as any);
     // Inject mocks
     (notesService as any).notesRepository = notesRepository;
     (notesService as any).auditService = auditService;

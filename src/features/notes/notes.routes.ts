@@ -15,13 +15,18 @@ import { rabbitMQService } from '../../services/rabbitmq.service';
 import Redlock from 'redlock';
 import redisClient from '../../config/redis';
 import { AppDataSource } from '../../config/database';
+import { NoteChatbotUsageService } from './notes-chatbot-usage.service';
+import { NoteChatbotUsageRepository } from './notes-chatbot-usage.repository';
+import { NoteChatbotUsage } from './notes-chatbot-usage.entity';
 
 const redlock = new Redlock([redisClient]);
 
 // Initialize services with proper dependencies
 const noteEmbeddingRepository = new NoteEmbeddingRepository(NoteEmbedding, AppDataSource.manager);
 const embeddingService = new NoteEmbeddingService(noteEmbeddingRepository);
-const notesService = new NotesService(embeddingService, rabbitMQService);
+const noteChatbotUsageRepository = new NoteChatbotUsageRepository(NoteChatbotUsage, AppDataSource.manager);
+const usageService = new NoteChatbotUsageService(noteChatbotUsageRepository);
+const notesService = new NotesService(embeddingService, rabbitMQService, usageService);
 
 const router = Router();
 

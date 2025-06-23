@@ -64,6 +64,9 @@ export class NotesChatService {
   }
 
   async generateChatResponse(question: string, notes: Note[]): Promise<string> {
+    // todo complete: find a better way to handle this, since it may affect AI response if it's cut off in the middle.
+    // todo complete2: let AI guide to the exact article it used for the answer.
+    
     const CONTEXT_MAX_LENGTH = 1000; // Max characters per note to send to the model
     
     if (notes.length === 0) {

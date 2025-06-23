@@ -16,4 +16,8 @@ export class NoteChatbotUsageService {
   async getUsageCount(noteId: string): Promise<number> {
     return this.usageRepo.count({ where: { noteId } });
   }
+
+  async deleteByNoteId(noteId: string): Promise<void> {
+    await this.usageRepo.delete({ noteId });
+  }
 } 

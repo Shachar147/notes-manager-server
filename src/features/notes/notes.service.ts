@@ -6,18 +6,21 @@ import { User } from '../auth/user.entity';
 import { NoteEmbeddingService } from './notes.embedding.service';
 import { rabbitMQService, RabbitMQService } from '../../services/rabbitmq.service';
 import { NoteTopic } from './notes.topics';
+import { NoteChatbotUsageService } from './notes-chatbot-usage.service';
 
 export class NotesService {
     private notesRepository: NoteRepository;
     private auditService: AuditService;
     private embeddingService: NoteEmbeddingService;
     private rabbitmqService: RabbitMQService;
+    private usageService: NoteChatbotUsageService;
 
-    constructor(embeddingService: NoteEmbeddingService, rabbitmqService: RabbitMQService) {
+    constructor(embeddingService: NoteEmbeddingService, rabbitmqService: RabbitMQService, usageService: NoteChatbotUsageService) {
         this.notesRepository = new NoteRepository();
         this.auditService = new AuditService();
         this.embeddingService = embeddingService;
         this.rabbitmqService = rabbitmqService;
+        this.usageService = usageService;
     }
 
     async createNote(noteData: Partial<Note>, user: User): Promise<Note> {
@@ -76,7 +79,7 @@ export class NotesService {
         }
 
         await this.embeddingService.delete(id);
-
+        await this.usageService.deleteByNoteId(id);
         await this.notesRepository.delete(id, userId);
 
         // Log the deletion event
