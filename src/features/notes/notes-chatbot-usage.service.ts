@@ -20,4 +20,19 @@ export class NoteChatbotUsageService {
   async deleteByNoteId(noteId: string): Promise<void> {
     await this.usageRepo.delete({ noteId });
   }
+
+  async getUsageStatistics(): Promise<{ title: string; noteId: string; total: number }[]> {
+    const result = await this.usageRepo
+      .createQueryBuilder('u')
+      .select('n.title', 'title')
+      .addSelect('u.noteId', 'noteId')
+      .addSelect('COUNT(*)', 'total')
+      .innerJoin('note', 'n', 'n.id = u.noteId')
+      .groupBy('n.title')
+      .addGroupBy('u.noteId')
+      .orderBy('total', 'DESC')
+      .getRawMany();
+    // Convert total from string to number
+    return result.map((row: any) => ({ ...row, total: Number(row.total) }));
+  }
 } 

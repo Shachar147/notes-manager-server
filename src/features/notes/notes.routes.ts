@@ -5,7 +5,8 @@ import {
     createCreateNote,
     createUpdateNote,
     createDeleteNote,
-    createDuplicateNote
+    createDuplicateNote,
+    createGetChatbotUsageStatistics
 } from './notes.controller';
 import { NotesService } from './notes.service';
 import { NoteEmbeddingService } from './notes.embedding.service';
@@ -30,6 +31,7 @@ const notesService = new NotesService(embeddingService, rabbitMQService, usageSe
 
 const router = Router();
 
+router.get('/chatbot-usage-stats', createGetChatbotUsageStatistics(notesService));
 router.get('/', createGetAllNotes(notesService));
 router.get('/:id', createGetNoteById(notesService));
 router.post('/', createCreateNote(notesService));

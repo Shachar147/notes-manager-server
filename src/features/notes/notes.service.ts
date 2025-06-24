@@ -139,4 +139,8 @@ export class NotesService {
         ]);
         return { notes, total };
     }
+
+    async getChatbotUsageStatistics(): Promise<{ title: string; noteId: string; total: number }[]> {
+        return this.usageService.getUsageStatistics();
+    }
 } 

@@ -11,7 +11,7 @@ export const USERS_CACHE_TTL_SEC = 60; // 60 sec
 
 // rate limiting
 export const PER_MINUTE = 60; // per minute
-export const RATE_LIMITING_MAX_REQUESTS = 15; // 15 requests
+export const RATE_LIMITING_MAX_REQUESTS = 100; // 15 requests
 
 // locks
 export const REDIS_LOCK_CONFIGURATION =  {

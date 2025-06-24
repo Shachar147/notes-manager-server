@@ -137,3 +137,13 @@ export const createDuplicateNote = (notesService: NotesService) => async (req: R
         sendError(req, res, `Failed to duplicate note: ${error.message}`, error.message.includes('not found') ? 404 : 500, { errorMessage: error.message, exc_info: error.stack });
     }
 };
+
+export const createGetChatbotUsageStatistics = (notesService: NotesService) => async (req: Request, res: Response) => {
+    try {
+        const stats = await notesService.getChatbotUsageStatistics();
+        sendSuccess(req, res, stats);
+    } catch (error: any) {
+        console.error('Error fetching chatbot usage statistics:', error);
+        sendError(req, res, `Failed to fetch chatbot usage statistics: ${error.message}`, 500, { errorMessage: error.message, exc_info: error.stack });
+    }
+};
