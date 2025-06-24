@@ -117,6 +117,10 @@ export class NotesService {
             duplicatedNote
         );
 
+        // Publish event to RabbitMQ
+        console.log("about to publish note duplicated event");
+        await rabbitMQService.publishEvent(NoteTopic.NOTE_DUPLICATED, duplicatedNote);
+
         return duplicatedNote;
     }
 

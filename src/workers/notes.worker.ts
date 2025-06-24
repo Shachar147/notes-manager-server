@@ -22,6 +22,7 @@ class NotesWorker {
         this.topicToHandler = {
             [NoteTopic.NOTE_CREATED]: this.handleEmbeddingEvent.bind(this),
             [NoteTopic.NOTE_UPDATED]: this.handleEmbeddingEvent.bind(this),
+            [NoteTopic.NOTE_DUPLICATED]: this.handleEmbeddingEvent.bind(this),
         };
     }
 
