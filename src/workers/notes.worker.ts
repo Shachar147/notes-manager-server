@@ -72,13 +72,7 @@ class NotesWorker {
                 }
             });
             logger.info(`
-    _             _ _ _    __        __         _             
-   / \\  _   _  __| (_) |_  \\ \\      / /__  _ __| | _____ _ __ 
-  / _ \\| | | |/ _\` | | __|  \\ \\ /\\ / / _ \\| '__| |/ / _ \\ '__|
- / ___ \\ |_| | (_| | | |_    \\ V  V / (_) | |  |   <  __/ |   
-/_/   \\_\\__,_|\\__,_|_|\\__|    \\_/\\_/ \\___/|_|  |_|\\_\\___|_|   
-
-Notes Manager Notes Worker is running!
+            Notes Manager Notes Worker is running!
 `);
         } catch (error) {
             logger.error('Failed to start notes worker:', error);
