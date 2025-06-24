@@ -1,5 +1,22 @@
 version: '3.8'
 services:
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_ORIGINS=*
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+    restart: unless-stopped
   postgres:
     image: postgres:latest
     container_name: notes_db
@@ -46,12 +63,13 @@ services:
       - "5601:5601"
   redis:
     image: redis:7.2
-    container_name: notes-redis
+    container_name: redis
     ports:
       - "6379:6379"
     restart: unless-stopped
 
 volumes:
+  ollama_data:
   postgres_data:
   rabbitmq_data:
   elasticsearch_data:

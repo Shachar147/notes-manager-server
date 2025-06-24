@@ -6,9 +6,20 @@ import { AuditService } from '../../audit/audit.service';
 import { AuditTopic } from '../../audit/audit.topics';
 import { User } from '../../auth/user.entity';
 import { Note } from '../notes.entity';
+import { NoteEmbeddingService } from '../notes.embedding.service';
+
+// Mock the rabbitMQService module
+jest.mock('../../../services/rabbitmq.service', () => ({
+  rabbitMQService: {
+    publishEvent: jest.fn().mockResolvedValue(undefined),
+    getChannel: jest.fn().mockResolvedValue({ publish: jest.fn() }),
+    connect: jest.fn().mockResolvedValue(undefined)
+  }
+}));
 
 jest.mock('../notes.repository');
 jest.mock('../../audit/audit.service');
+jest.mock('../notes.embedding.service');
 
 const mockUser: User = { id: 'user1', email: 'test@example.com' } as any;
 const mockNote: Note = {
@@ -25,14 +36,27 @@ describe('NotesService', () => {
   let notesService: NotesService;
   let notesRepository: jest.Mocked<NoteRepository>;
   let auditService: jest.Mocked<AuditService>;
+  let embeddingService: jest.Mocked<NoteEmbeddingService>;
 
   beforeEach(() => {
     notesRepository = new (NoteRepository as any)();
     auditService = new (AuditService as any)();
-    notesService = new NotesService();
+    embeddingService = new (NoteEmbeddingService as any)();
+    const mockChannel = { publish: jest.fn() };
+    const mockRabbitMQService = { 
+      getChannel: jest.fn().mockResolvedValue(mockChannel),
+      connect: jest.fn().mockResolvedValue(undefined)
+    };
+    const mockUsageService = { deleteByNoteId: jest.fn().mockResolvedValue(undefined) };
+    notesService = new NotesService(embeddingService, mockRabbitMQService as any, mockUsageService as any);
     // Inject mocks
     (notesService as any).notesRepository = notesRepository;
     (notesService as any).auditService = auditService;
+
+    // Mock generateEmbedding to avoid network calls
+    embeddingService.generateEmbedding.mockResolvedValue([]);
+    // Mock delete method
+    embeddingService.delete = jest.fn().mockResolvedValue(undefined);
   });
 
   afterEach(() => {

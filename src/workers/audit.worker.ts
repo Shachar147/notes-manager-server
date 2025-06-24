@@ -95,6 +95,19 @@ Notes Manager Audit Worker is running!
         console.log("Receieved", {
             data
         })
+        // Validation for required fields
+        if (!data.eventType || !data.entityType || !data.entityId) {
+            const logData = {
+                eventType: data.eventType,
+                entityType: data.entityType,
+                entityId: data.entityId,
+                userId: data.userId,
+                data
+            };
+            console.error('Missing required audit log fields', logData);
+            logger.error('Missing required audit log fields', logData);
+            return; // Skip writing to DB
+        }
         // Write to DB using AuditService
         await this.auditService.createAuditLog({
                 eventType: data.eventType,
@@ -106,6 +119,19 @@ Notes Manager Audit Worker is running!
                 metadata: data.metadata
         })
         logger.info(`Created audit log for ${data.entityType} ${data.entityId}`);
+
+        if (data.eventType === AuditTopic.NOTE_DUPLICATED) {
+            // Write to DB to the other event as well (the duplicated one)
+            await this.auditService.createAuditLog({
+                eventType: data.eventType,
+                entityType: data.entityType,
+                entityId: data.newData!.id,
+                userId: data.userId,
+                oldData: data.oldData,
+                newData: data.newData,
+                metadata: data.metadata
+        })
+        }
     }
 
     async close() {

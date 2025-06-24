@@ -2,19 +2,28 @@ import { NoteRepository } from './notes.repository';
 import { Note } from './notes.entity';
 import { AuditService } from '../audit/audit.service';
 import { AuditTopic } from '../audit/audit.topics';
-import {User} from "../auth/user.entity";
+import { User } from '../auth/user.entity';
+import { NoteEmbeddingService } from './notes.embedding.service';
+import { rabbitMQService, RabbitMQService } from '../../services/rabbitmq.service';
+import { NoteTopic } from './notes.topics';
+import { NoteChatbotUsageService } from './notes-chatbot-usage.service';
 
 export class NotesService {
     private notesRepository: NoteRepository;
     private auditService: AuditService;
+    private embeddingService: NoteEmbeddingService;
+    private rabbitmqService: RabbitMQService;
+    private usageService: NoteChatbotUsageService;
 
-    constructor() {
+    constructor(embeddingService: NoteEmbeddingService, rabbitmqService: RabbitMQService, usageService: NoteChatbotUsageService) {
         this.notesRepository = new NoteRepository();
         this.auditService = new AuditService();
+        this.embeddingService = embeddingService;
+        this.rabbitmqService = rabbitmqService;
+        this.usageService = usageService;
     }
 
     async createNote(noteData: Partial<Note>, user: User): Promise<Note> {
-
         const note = await this.notesRepository.create({
             ...noteData,
         }, user);
@@ -28,6 +37,10 @@ export class NotesService {
             undefined,
             note
         );
+
+        // Publish event to RabbitMQ
+        console.log("about to publish note created event");
+        await rabbitMQService.publishEvent(NoteTopic.NOTE_CREATED, note);
 
         return note;
     }
@@ -53,6 +66,9 @@ export class NotesService {
             updatedNote
         );
 
+        // Publish event to RabbitMQ
+        await rabbitMQService.publishEvent(NoteTopic.NOTE_UPDATED, updatedNote);
+
         return updatedNote;
     }
 
@@ -62,6 +78,8 @@ export class NotesService {
             throw new Error(`Note with id ${id} not found`);
         }
 
+        await this.embeddingService.delete(id);
+        await this.usageService.deleteByNoteId(id);
         await this.notesRepository.delete(id, userId);
 
         // Log the deletion event
@@ -98,6 +116,10 @@ export class NotesService {
             originalNote,
             duplicatedNote
         );
+
+        // Publish event to RabbitMQ
+        console.log("about to publish note duplicated event");
+        await rabbitMQService.publishEvent(NoteTopic.NOTE_DUPLICATED, duplicatedNote);
 
         return duplicatedNote;
     }
