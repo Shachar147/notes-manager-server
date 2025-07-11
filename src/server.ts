@@ -3,7 +3,7 @@ import { AppDataSource } from './config/database';
 import app from './app';
 import { rabbitMQService } from './services/rabbitmq.service';
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT ||8001;
 
 AppDataSource.initialize()
     .then(async () => {

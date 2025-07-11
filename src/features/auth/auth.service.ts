@@ -84,7 +84,9 @@ export class AuthService {
 
     async validateToken(token: string): Promise<User> {
         try {
+            console.log('token', token);
             const decoded = jwt.verify(token, JWT_CONFIG.SECRET) as { userId: string };
+            console.log('decoded', decoded);
             const user = await this.userRepository.findOne({ where: { id: decoded.userId } });
             if (!user) {
                 throw new Error('User not found');

@@ -6,11 +6,6 @@ import {CreateNoteDto, NoteInterface} from "./notes.types";
 import { User } from '../auth/user.entity';
 import logger from '../../utils/logger';
 import Redlock from 'redlock'; 
-import redisClient, { REDIS_LOCK_CONFIGURATION } from '../../config/redis';
-import { sleep } from '../../utils/utils'
-import { NoteEmbeddingService } from './notes.embedding.service';
-
-const redlock = new Redlock([redisClient], REDIS_LOCK_CONFIGURATION);
 
 function formatNote(note: Note): NoteInterface {
     return {
